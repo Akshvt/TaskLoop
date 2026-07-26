@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const Task = require('../models/Task');
 const User = require('../models/User');
-const { sendDeadlineReminder, sendOverdueDigest } = require('./emailService');
+const { sendDeadlineReminder, sendOverdueDigest, sendOverdueNotice } = require('./emailService');
 
 const startCronJobs = () => {
   // ─── 8 AM IST (02:30 UTC) — 24hr deadline reminders to employees ──────────
@@ -47,11 +47,17 @@ const startCronJobs = () => {
       const founder = await User.findOne({ email: process.env.FOUNDER_EMAIL });
       if (!founder) {
         console.error('  → Founder account not found — cannot send digest');
-        return;
+      } else {
+        await sendOverdueDigest(founder, overdueTasks);
+        console.log(`  → Sent overdue digest (${overdueTasks.length} task(s))`);
       }
 
-      await sendOverdueDigest(founder, overdueTasks);
-      console.log(`  → Sent overdue digest (${overdueTasks.length} task(s))`);
+      // Send individual overdue notices to employees
+      for (const task of overdueTasks) {
+        if (task.assignedTo) {
+          await sendOverdueNotice(task.assignedTo, task).catch(console.error);
+        }
+      }
     } catch (err) {
       console.error('Overdue digest cron error:', err.message);
     }

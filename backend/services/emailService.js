@@ -124,9 +124,48 @@ ${DASHBOARD()}`,
   });
 };
 
+// ─── Trigger 5: Announcement → employees ──────────────────────────────────────
+const sendAnnouncementEmail = async (employee, announcement) => {
+  await send({
+    to:      employee.email,
+    subject: `📢 New Announcement: ${announcement.title}`,
+    text: `Hi ${employee.name},
+
+A new announcement has been posted by the founder:
+
+${announcement.title}
+${'-'.repeat(announcement.title.length)}
+
+${announcement.body}
+
+View it on the dashboard:
+${DASHBOARD()}`,
+  });
+};
+
+// ─── Trigger 6: Overdue Notice → employee ─────────────────────────────────────
+const sendOverdueNotice = async (employee, task) => {
+  await send({
+    to:      employee.email,
+    subject: `⚠️ URGENT: Task Overdue — ${task.title}`,
+    text: `Hi ${employee.name},
+
+This is an automated notice that your task is now OVERDUE.
+
+Task: ${task.title}
+Deadline was: ${formatDate(task.deadline)}
+Current Status: ${task.status}
+
+Please complete this task immediately and update the dashboard:
+${DASHBOARD()}`,
+  });
+};
+
 module.exports = {
   sendTaskAssignment,
   sendTaskCompletion,
   sendDeadlineReminder,
   sendOverdueDigest,
+  sendAnnouncementEmail,
+  sendOverdueNotice,
 };

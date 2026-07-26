@@ -172,6 +172,9 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
             </div>
             <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
               Assigned to {task.assignedTo?.name} · Due {formatDate(task.deadline)}
+              {task.status === 'Done' && task.completedAt && new Date(task.completedAt) > new Date(task.deadline) && (
+                <span style={{ color: '#F4A836', marginLeft: '6px', fontWeight: 600 }}>(Submitted late)</span>
+              )}
             </div>
           </div>
         )}

@@ -36,6 +36,14 @@ router.post('/', requireFounder, async (req, res) => {
     const populated = await Announcement.findById(announcement._id)
       .populate('createdBy', 'name');
 
+    // Send email to all employees (non-blocking)
+    const User = require('../models/User');
+    const { sendAnnouncementEmail } = require('../services/emailService');
+    const employees = await User.find({ role: 'employee' });
+    employees.forEach(emp => {
+      sendAnnouncementEmail(emp, populated).catch(console.error);
+    });
+
     res.status(201).json(populated);
   } catch (err) {
     console.error('Create announcement error:', err.message);

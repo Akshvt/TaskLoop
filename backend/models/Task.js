@@ -19,6 +19,7 @@ const TaskSchema = new mongoose.Schema({
     default: 'To Do',
   },
   notes:       [NoteSchema],
+  completedAt: { type: Date },
   createdAt:   { type: Date, default: Date.now },
   lastUpdated: { type: Date, default: Date.now },
 });

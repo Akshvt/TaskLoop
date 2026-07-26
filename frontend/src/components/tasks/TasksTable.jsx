@@ -1,8 +1,12 @@
 import StatusBadge from '../common/StatusBadge';
 import PriorityBadge from '../common/PriorityBadge';
 
-const getDeadlineDisplay = (deadline) => {
-  const diff = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
+const getDeadlineDisplay = (task) => {
+  if (task.status === 'Done' && task.completedAt && new Date(task.completedAt) > new Date(task.deadline)) {
+    return { text: 'Submitted late', color: '#F4A836' }; // Orange warning color
+  }
+
+  const diff = Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24));
   if (diff < 0)  return { text: `${Math.abs(diff)}d overdue`, color: '#EF4444' };
   if (diff === 0) return { text: 'Due today',                 color: '#F4A836' };
   if (diff <= 2)  return { text: `${diff}d left`,            color: '#F4A836' };
@@ -61,7 +65,7 @@ export default function TasksTable({ tasks, onRowClick }) {
             const overdue  = isOverdue(task);
             const dueSoon  = isDueSoon(task);
             const done     = task.status === 'Done';
-            const deadline = getDeadlineDisplay(task.deadline);
+            const deadline = getDeadlineDisplay(task);
 
             let rowBg = 'transparent';
             if (overdue) rowBg = 'rgba(239,68,68,0.06)';

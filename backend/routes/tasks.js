@@ -135,6 +135,13 @@ router.put('/:id', async (req, res) => {
       }
     }
 
+    // If status changed to Done, record completion time
+    if (task.status === 'Done' && previousStatus !== 'Done') {
+      task.completedAt = Date.now();
+    } else if (task.status !== 'Done') {
+      task.completedAt = undefined; // clear it if moved out of Done
+    }
+
     await task.save(); // pre-save hook updates lastUpdated
 
     // If status just changed to Done, email the founder
