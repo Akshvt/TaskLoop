@@ -24,9 +24,8 @@ const TaskSchema = new mongoose.Schema({
 });
 
 // Pre-save hook — update lastUpdated on every save
-TaskSchema.pre('save', function (next) {
+TaskSchema.pre('save', function () {
   this.lastUpdated = Date.now();
-  next();
 });
 
 module.exports = mongoose.model('Task', TaskSchema);
