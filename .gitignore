@@ -1,0 +1,15 @@
+# Exclude PRD and prompt context files
+CLAUDE.md
+Namhya_TaskManager_PRD.md
+*.md
+
+# Exclude environment variables and secrets
+.env
+.env.local
+.env.*.local
+
+# Exclude node_modules and build outputs
+node_modules/
+dist/
+build/
+*.log
