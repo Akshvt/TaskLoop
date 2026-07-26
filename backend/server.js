@@ -25,6 +25,37 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ─── HTTP Seed Route ────────────────────────────────────────────────────────
+app.get('/api/seed', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    const bcrypt = require('bcryptjs');
+    const founderEmail = process.env.FOUNDER_EMAIL;
+
+    if (!founderEmail) {
+      return res.status(400).json({ error: 'FOUNDER_EMAIL env var is not set' });
+    }
+
+    const existing = await User.findOne({ email: founderEmail });
+    if (existing) {
+      return res.json({ message: 'Founder account already exists — skipping' });
+    }
+
+    const passwordHash = await bcrypt.hash('namhya2026', 10);
+    await User.create({
+      name:  'Founder',
+      email: founderEmail,
+      passwordHash,
+      role:  'founder',
+    });
+
+    res.json({ message: 'Founder account created successfully with email: ' + founderEmail });
+  } catch (err) {
+    console.error('HTTP Seed error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // ─── 404 fallback ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
   res.status(404).json({ error: 'Route not found' });
