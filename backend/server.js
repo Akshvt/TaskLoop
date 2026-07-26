@@ -30,15 +30,11 @@ app.get('/api/seed', async (req, res) => {
   try {
     const User = require('./models/User');
     const bcrypt = require('bcryptjs');
-    const founderEmail = process.env.FOUNDER_EMAIL;
+    const founderEmail = 'founder@namhyafoods.com';
 
-    if (!founderEmail) {
-      return res.status(400).json({ error: 'FOUNDER_EMAIL env var is not set' });
-    }
-
-    const existing = await User.findOne({ email: founderEmail });
-    if (existing) {
-      return res.json({ message: 'Founder account already exists — skipping' });
+    const existingFounder = await User.findOne({ role: 'founder' });
+    if (existingFounder) {
+      return res.status(403).json({ error: 'Founder already seeded' });
     }
 
     const passwordHash = await bcrypt.hash('namhya2026', 10);

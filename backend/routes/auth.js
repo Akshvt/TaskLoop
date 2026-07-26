@@ -54,7 +54,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    if (!GMAIL_RE.test(email)) {
+    if (email !== 'founder@namhyafoods.com' && !GMAIL_RE.test(email)) {
       return res.status(400).json({ error: 'Only Gmail accounts are allowed' });
     }
 
