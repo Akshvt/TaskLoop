@@ -1,37 +1,27 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 
-// Force IPv4 resolution to prevent ENETUNREACH errors on Render for Gmail IPv6 SMTP
-require('dns').setDefaultResultOrder('ipv4first');
+// ─── Brevo Transactional Email Sender ─────────────────────────────────────────
+const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
 
-// ─── Transporter ──────────────────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,                    // STARTTLS on 587, not implicit TLS on 465
-  family: 4,                        // Force IPv4 — Render blocks outbound IPv6
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  connectionTimeout: 10000,         // 10s to establish TCP connection
-  greetingTimeout:   10000,         // 10s to receive SMTP greeting
-  socketTimeout:     10000,         // 10s of inactivity before dropping
+const sender = () => ({
+  name: 'Namhya Flow',
+  email: process.env.EMAIL_FROM,
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatDate = (date) =>
   new Date(date).toLocaleDateString('en-IN', {
-    day:   'numeric',
+    day: 'numeric',
     month: 'long',
-    year:  'numeric',
+    year: 'numeric',
   });
 
 const formatTime = (date) =>
   new Date(date).toLocaleString('en-IN', {
-    day:    'numeric',
-    month:  'long',
-    year:   'numeric',
-    hour:   '2-digit',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
     minute: '2-digit',
     timeZone: 'Asia/Kolkata',
   });
@@ -44,15 +34,29 @@ const DASHBOARD = () => process.env.DASHBOARD_URL || 'https://your-app.vercel.ap
 // ─── Send helper ──────────────────────────────────────────────────────────────
 const send = async ({ to, subject, text }) => {
   try {
-    await transporter.sendMail({
-      from: `"Namhya Tasks" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      text,
-    });
+    await axios.post(
+      BREVO_URL,
+      {
+        sender: sender(),
+        to: [{ email: to }],
+        subject,
+        textContent: text,
+      },
+      {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        timeout: 15000,
+      }
+    );
     console.log(`✅ Email sent (${subject}) → ${to}`);
   } catch (err) {
-    console.error(`❌ Email failed (${subject}):`, err);
+    console.error(
+      `❌ Email failed (${subject}):`,
+      err.response ? { status: err.response.status, data: err.response.data } : err
+    );
     // Non-fatal — don't throw, let the API response succeed
   }
 };
@@ -60,7 +64,7 @@ const send = async ({ to, subject, text }) => {
 // ─── Trigger 1: Task Assignment → employee ────────────────────────────────────
 const sendTaskAssignment = async (employee, task) => {
   await send({
-    to:      employee.email,
+    to: employee.email,
     subject: `New task assigned to you — ${task.title}`,
     text: `Hi ${employee.name},
 
@@ -79,7 +83,7 @@ ${DASHBOARD()}`,
 // ─── Trigger 2: Task Completion → founder ─────────────────────────────────────
 const sendTaskCompletion = async (founder, task, employee) => {
   await send({
-    to:      founder.email,
+    to: founder.email,
     subject: `✅ Task completed — ${task.title}`,
     text: `Hi,
 
@@ -95,7 +99,7 @@ View it on the dashboard: ${DASHBOARD()}`,
 // ─── Trigger 3: Deadline Reminder (24h) → employee ───────────────────────────
 const sendDeadlineReminder = async (employee, task) => {
   await send({
-    to:      employee.email,
+    to: employee.email,
     subject: `⏰ Task due tomorrow — ${task.title}`,
     text: `Hi ${employee.name},
 
@@ -121,7 +125,7 @@ const sendOverdueDigest = async (founder, overdueTasks) => {
     .join('\n');
 
   await send({
-    to:      founder.email,
+    to: founder.email,
     subject: `🔴 Overdue Tasks — ${formatDate(new Date())}`,
     text: `Hi,
 
@@ -137,7 +141,7 @@ ${DASHBOARD()}`,
 // ─── Trigger 5: Announcement → employees ──────────────────────────────────────
 const sendAnnouncementEmail = async (employee, announcement) => {
   await send({
-    to:      employee.email,
+    to: employee.email,
     subject: `📢 New Announcement: ${announcement.title}`,
     text: `Hi ${employee.name},
 
@@ -156,7 +160,7 @@ ${DASHBOARD()}`,
 // ─── Trigger 6: Overdue Notice → employee ─────────────────────────────────────
 const sendOverdueNotice = async (employee, task) => {
   await send({
-    to:      employee.email,
+    to: employee.email,
     subject: `⚠️ URGENT: Task Overdue — ${task.title}`,
     text: `Hi ${employee.name},
 
