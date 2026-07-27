@@ -2,6 +2,7 @@
 CLAUDE.md
 Namhya_TaskManager_PRD.md
 *.md
+!README.md
 
 # Exclude environment variables and secrets
 .env
