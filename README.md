@@ -1,25 +1,7 @@
-# Namhya Tasks — Founder's Tour & Platform Guide 🚀
+# TaskLoop — Founder's Tour & Platform Guide 🚀
 
-Welcome to **Namhya Tasks** (Namhya Flow), a state-of-the-art SaaS workspace designed specifically for ambitious founders and high-velocity teams. Built with a bold **Neo-Brutalist aesthetic**, this platform eliminates visual clutter and replaces it with tactile, high-contrast, sticker-like elements that make tracking company goals, deadlines, and team accountability effortless.
+Welcome to **Namhya Tasks** (TaskLoop), a state-of-the-art SaaS workspace designed specifically for ambitious founders and high-velocity teams. Built with a bold **Neo-Brutalist aesthetic**, this platform eliminates visual clutter and replaces it with tactile, high-contrast, sticker-like elements that make tracking company goals, deadlines, and team accountability effortless.
 
----
-
-## 📸 Required Screenshots Guide
-
-To complete the visual tour in this document, please take the following screenshots from your app and place them inside the `screenshots/` folder in the project root with these exact filenames:
-
-| Filename | Where to Capture | What to Show |
-| :--- | :--- | :--- |
-| `employee-register.png` | `/register` | The employee registration form where new team members sign up using their Gmail address. |
-| `dashboard-overview.png` | `/` (Dashboard) | The main command center showing the chunky stat cards (Total Tasks, Overdue, Due Soon, Done) and the quick reminder buttons. |
-| `tasks-board.png` | `/tasks` | The grouped tasks table showing collapsible To Do, In Progress, Blocked, and Done sections with priority pills and progress bars. |
-| `task-detail-drawer.png` | Click any task | The slide-out Task Detail Drawer on the right side, showing status dropdowns, priority badges, and tabs. |
-| `subtasks-checklist.png` | Drawer -> Subtasks tab | A task drawer with a checklist of subtasks and the visual progress bar at 50% or 100%. |
-| `team-management.png` | `/employees` | The Team Members page showing the employee roster and task statistics per employee. |
-| `announcements-feed.png` | `/announcements` | The Announcements feed showing company-wide broadcast cards posted by the Founder. |
-| `email-notification.png` | Your Gmail inbox | An example of an automated email alert received in Gmail (e.g., "New Task Assigned" or "Overdue Reminder"). |
-
----
 
 ## 🏢 Platform Features & Screen-by-Screen Tour
 
