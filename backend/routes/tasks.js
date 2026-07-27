@@ -6,6 +6,27 @@ const requireAuth    = require('../middleware/requireAuth');
 const requireFounder = require('../middleware/requireFounder');
 const { sendTaskAssignment, sendTaskCompletion, sendOverdueNotice } = require('../services/emailService');
 
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+
+// Multer: memory storage, 10 MB limit
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+// Configure Cloudinary from CLOUDINARY_URL env var (auto-detected)
+// CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+
+// ─── Helper: full populate chain ─────────────────────────────────────────────
+const populateTask = (query) =>
+  query
+    .populate('assignedTo', 'name email')
+    .populate('createdBy', 'name email')
+    .populate('notes.addedBy', 'name')
+    .populate('comments.author', 'name')
+    .populate('attachments.uploadedBy', 'name');
+
 // All task routes require auth
 router.use(requireAuth);
 
@@ -58,10 +79,7 @@ router.get('/', async (req, res) => {
     if (req.query.status)     filter.status     = req.query.status;
     if (req.query.priority)   filter.priority   = req.query.priority;
 
-    const tasks = await Task.find(filter)
-      .populate('assignedTo', 'name email')
-      .populate('createdBy', 'name email')
-      .populate('notes.addedBy', 'name')
+    const tasks = await populateTask(Task.find(filter))
       .sort({ createdAt: -1 });
 
     res.json(tasks);
@@ -89,9 +107,7 @@ router.post('/', requireFounder, async (req, res) => {
       priority: priority || 'Medium',
     });
 
-    const populated = await Task.findById(task._id)
-      .populate('assignedTo', 'name email')
-      .populate('createdBy', 'name email');
+    const populated = await populateTask(Task.findById(task._id));
 
     // Send assignment email (non-blocking)
     const employee = await User.findById(assignedTo);
@@ -129,13 +145,14 @@ router.put('/:id', async (req, res) => {
 
     if (req.user.role === 'founder') {
       // Founder can edit anything
-      const { title, description, assignedTo, deadline, priority, status } = req.body;
-      if (title !== undefined)       task.title       = title;
-      if (description !== undefined) task.description = description;
-      if (assignedTo !== undefined)  task.assignedTo  = assignedTo;
-      if (deadline !== undefined)    task.deadline    = deadline;
-      if (priority !== undefined)    task.priority    = priority;
-      if (status !== undefined)      task.status      = status;
+      const { title, description, assignedTo, deadline, priority, status, manualProgress } = req.body;
+      if (title !== undefined)          task.title          = title;
+      if (description !== undefined)    task.description    = description;
+      if (assignedTo !== undefined)     task.assignedTo     = assignedTo;
+      if (deadline !== undefined)       task.deadline       = deadline;
+      if (priority !== undefined)       task.priority       = priority;
+      if (status !== undefined)         task.status         = status;
+      if (manualProgress !== undefined) task.manualProgress = manualProgress;
     } else {
       // Employee can only update status
       if (req.body.status !== undefined) {
@@ -173,10 +190,7 @@ router.put('/:id', async (req, res) => {
       }
     }
 
-    const populated = await Task.findById(task._id)
-      .populate('assignedTo', 'name email')
-      .populate('createdBy', 'name email')
-      .populate('notes.addedBy', 'name');
+    const populated = await populateTask(Task.findById(task._id));
 
     res.json(populated);
   } catch (err) {
@@ -237,14 +251,300 @@ router.post('/:id/notes', async (req, res) => {
       });
     }
 
-    const populated = await Task.findById(task._id)
-      .populate('assignedTo', 'name email')
-      .populate('createdBy', 'name email')
-      .populate('notes.addedBy', 'name');
+    const populated = await populateTask(Task.findById(task._id));
 
     res.json(populated);
   } catch (err) {
     console.error('Add note error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUBTASK ROUTES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── POST /api/tasks/:id/subtasks ────────────────────────────────────────────
+router.post('/:id/subtasks', async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!title) {
+      return res.status(400).json({ error: 'Subtask title is required' });
+    }
+
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    // Permission: founder or assignee
+    const isAssignee = task.assignedTo.toString() === req.user._id;
+    if (req.user.role !== 'founder' && !isAssignee) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    task.subtasks.push({ title });
+    await task.save();
+
+    const populated = await populateTask(Task.findById(task._id));
+    res.json(populated);
+  } catch (err) {
+    console.error('Add subtask error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ─── PATCH /api/tasks/:id/subtasks/:subtaskId ────────────────────────────────
+router.patch('/:id/subtasks/:subtaskId', async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    // Permission: founder or assignee
+    const isAssignee = task.assignedTo.toString() === req.user._id;
+    if (req.user.role !== 'founder' && !isAssignee) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const subtask = task.subtasks.id(req.params.subtaskId);
+    if (!subtask) {
+      return res.status(404).json({ error: 'Subtask not found' });
+    }
+
+    if (req.body.isDone !== undefined) subtask.isDone = req.body.isDone;
+    if (req.body.title !== undefined)  subtask.title  = req.body.title;
+
+    await task.save();
+
+    const populated = await populateTask(Task.findById(task._id));
+    res.json(populated);
+  } catch (err) {
+    console.error('Update subtask error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ─── DELETE /api/tasks/:id/subtasks/:subtaskId ───────────────────────────────
+router.delete('/:id/subtasks/:subtaskId', async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    // Permission: founder or assignee
+    const isAssignee = task.assignedTo.toString() === req.user._id;
+    if (req.user.role !== 'founder' && !isAssignee) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    task.subtasks.pull({ _id: req.params.subtaskId });
+    await task.save();
+
+    const populated = await populateTask(Task.findById(task._id));
+    res.json(populated);
+  } catch (err) {
+    console.error('Delete subtask error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMMENT ROUTES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── POST /api/tasks/:id/comments ────────────────────────────────────────────
+router.post('/:id/comments', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: 'Comment text is required' });
+    }
+
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    // Permission: founder or assignee
+    const isAssignee = task.assignedTo.toString() === req.user._id;
+    if (req.user.role !== 'founder' && !isAssignee) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    task.comments.push({
+      text,
+      author: req.user._id,
+    });
+
+    await task.save();
+
+    // Notification — mirror note pattern
+    if (req.user.role === 'founder') {
+      await Notification.create({
+        recipient: task.assignedTo,
+        task: task._id,
+        type: 'comment_added',
+        message: `New comment on your task "${task.title}" by the founder`
+      });
+    } else if (task.createdBy) {
+      await Notification.create({
+        recipient: task.createdBy,
+        task: task._id,
+        type: 'comment_added',
+        message: `${req.user.name} commented on "${task.title}"`
+      });
+    }
+
+    const populated = await populateTask(Task.findById(task._id));
+    res.json(populated);
+  } catch (err) {
+    console.error('Add comment error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ─── DELETE /api/tasks/:id/comments/:commentId ───────────────────────────────
+router.delete('/:id/comments/:commentId', async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const comment = task.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    // Permission: founder or original author
+    const isAuthor = comment.author.toString() === req.user._id;
+    if (req.user.role !== 'founder' && !isAuthor) {
+      return res.status(403).json({ error: 'Not authorized to delete this comment' });
+    }
+
+    task.comments.pull({ _id: req.params.commentId });
+    await task.save();
+
+    const populated = await populateTask(Task.findById(task._id));
+    res.json(populated);
+  } catch (err) {
+    console.error('Delete comment error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ATTACHMENT ROUTES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── POST /api/tasks/:id/attachments ─────────────────────────────────────────
+router.post('/:id/attachments', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    // Permission: founder or assignee
+    const isAssignee = task.assignedTo.toString() === req.user._id;
+    if (req.user.role !== 'founder' && !isAssignee) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // Upload to Cloudinary
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'taskloop-attachments',
+          resource_type: 'auto',
+          public_id: `${task._id}_${Date.now()}_${req.file.originalname}`,
+        },
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+
+    task.attachments.push({
+      fileName:           req.file.originalname,
+      fileUrl:            result.secure_url,
+      fileType:           req.file.mimetype,
+      fileSize:           req.file.size,
+      cloudinaryPublicId: result.public_id,
+      uploadedBy:         req.user._id,
+    });
+
+    await task.save();
+
+    // Notification
+    if (req.user.role === 'founder') {
+      await Notification.create({
+        recipient: task.assignedTo,
+        task: task._id,
+        type: 'attachment_added',
+        message: `A file was attached to your task "${task.title}" by the founder`
+      });
+    } else if (task.createdBy) {
+      await Notification.create({
+        recipient: task.createdBy,
+        task: task._id,
+        type: 'attachment_added',
+        message: `${req.user.name} attached a file to "${task.title}"`
+      });
+    }
+
+    const populated = await populateTask(Task.findById(task._id));
+    res.json(populated);
+  } catch (err) {
+    console.error('Upload attachment error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ─── DELETE /api/tasks/:id/attachments/:attachmentId ─────────────────────────
+router.delete('/:id/attachments/:attachmentId', async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const attachment = task.attachments.id(req.params.attachmentId);
+    if (!attachment) {
+      return res.status(404).json({ error: 'Attachment not found' });
+    }
+
+    // Permission: founder or original uploader
+    const isUploader = attachment.uploadedBy.toString() === req.user._id;
+    if (req.user.role !== 'founder' && !isUploader) {
+      return res.status(403).json({ error: 'Not authorized to delete this attachment' });
+    }
+
+    // Delete from Cloudinary
+    if (attachment.cloudinaryPublicId) {
+      try {
+        await cloudinary.uploader.destroy(attachment.cloudinaryPublicId, { resource_type: 'raw' });
+      } catch (cloudErr) {
+        console.error('Cloudinary delete error (non-blocking):', cloudErr.message);
+      }
+    }
+
+    task.attachments.pull({ _id: req.params.attachmentId });
+    await task.save();
+
+    const populated = await populateTask(Task.findById(task._id));
+    res.json(populated);
+  } catch (err) {
+    console.error('Delete attachment error:', err.message);
     res.status(500).json({ error: 'Server error' });
   }
 });

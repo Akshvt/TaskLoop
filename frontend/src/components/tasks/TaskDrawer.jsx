@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import StatusBadge from '../common/StatusBadge';
@@ -17,6 +17,23 @@ const formatRelative = (d) => {
   return formatDate(d);
 };
 
+const formatFileSize = (bytes) => {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const getFileIcon = (type) => {
+  if (!type) return '📎';
+  if (type.startsWith('image/')) return '🖼️';
+  if (type.includes('pdf'))     return '📄';
+  if (type.includes('sheet') || type.includes('csv') || type.includes('excel')) return '📊';
+  if (type.includes('doc') || type.includes('word')) return '📝';
+  if (type.includes('zip') || type.includes('rar') || type.includes('tar'))  return '📦';
+  return '📎';
+};
+
 const LABEL = { fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-muted)', marginBottom: '8px', fontFamily: '"Inter", sans-serif' };
 const SECTION = { display: 'flex', flexDirection: 'column', gap: '0' };
 
@@ -24,6 +41,7 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
   const { user } = useAuth();
   const addToast  = useToast();
   const isFounder = user?.role === 'founder';
+  const fileInputRef = useRef(null);
 
   const [isEditing, setIsEditing]   = useState(false);
   const [editFields, setEditFields] = useState({
@@ -36,6 +54,14 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
   const [noteText, setNoteText] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // New state
+  const [activeTab, setActiveTab] = useState('subtasks');
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  // ─── Existing handlers ─────────────────────────────────────────────────────
 
   const handleStatusChange = async (newStatus) => {
     try {
@@ -89,9 +115,107 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
     }
   };
 
+  // ─── Subtask handlers ──────────────────────────────────────────────────────
+
+  const handleAddSubtask = async () => {
+    if (!newSubtaskTitle.trim()) return;
+    try {
+      const res = await api.post(`/api/tasks/${task._id}/subtasks`, { title: newSubtaskTitle.trim() });
+      onUpdate(res.data);
+      setNewSubtaskTitle('');
+      addToast('Subtask added', 'success');
+    } catch {
+      addToast('Failed to add subtask', 'error');
+    }
+  };
+
+  const handleToggleSubtask = async (subtaskId, currentDone) => {
+    try {
+      const res = await api.patch(`/api/tasks/${task._id}/subtasks/${subtaskId}`, { isDone: !currentDone });
+      onUpdate(res.data);
+    } catch {
+      addToast('Failed to update subtask', 'error');
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId) => {
+    try {
+      const res = await api.delete(`/api/tasks/${task._id}/subtasks/${subtaskId}`);
+      onUpdate(res.data);
+      addToast('Subtask deleted', 'success');
+    } catch {
+      addToast('Failed to delete subtask', 'error');
+    }
+  };
+
+  // ─── Comment handlers ──────────────────────────────────────────────────────
+
+  const handleAddComment = async () => {
+    if (!commentText.trim()) return;
+    try {
+      const res = await api.post(`/api/tasks/${task._id}/comments`, { text: commentText.trim() });
+      onUpdate(res.data);
+      setCommentText('');
+      addToast('Comment added', 'success');
+    } catch {
+      addToast('Failed to add comment', 'error');
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const res = await api.delete(`/api/tasks/${task._id}/comments/${commentId}`);
+      onUpdate(res.data);
+      addToast('Comment deleted', 'success');
+    } catch {
+      addToast('Failed to delete comment', 'error');
+    }
+  };
+
+  // ─── Attachment handlers ───────────────────────────────────────────────────
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.post(`/api/tasks/${task._id}/attachments`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      onUpdate(res.data);
+      addToast('File uploaded', 'success');
+    } catch {
+      addToast('Failed to upload file', 'error');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId) => {
+    try {
+      const res = await api.delete(`/api/tasks/${task._id}/attachments/${attachmentId}`);
+      onUpdate(res.data);
+      addToast('Attachment deleted', 'success');
+    } catch {
+      addToast('Failed to delete attachment', 'error');
+    }
+  };
+
+  // ─── Derived data ──────────────────────────────────────────────────────────
+
   const sortedNotes = task.notes
     ? [...task.notes].sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
     : [];
+
+  const sortedComments = task.comments
+    ? [...task.comments].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    : [];
+
+  const progress = task.progress ?? 0;
 
   const inputStyle = {
     padding: '8px 10px',
@@ -104,6 +228,22 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
     fontFamily: '"Inter", sans-serif',
     outline: 'none',
   };
+
+  const tabButtonStyle = (isActive) => ({
+    flex: 1,
+    padding: '8px 0',
+    background: isActive ? 'var(--color-surface)' : 'transparent',
+    border: 'none',
+    borderBottom: isActive ? '2px solid var(--color-jade)' : '2px solid transparent',
+    color: isActive ? 'var(--color-jade)' : 'var(--color-text-muted)',
+    fontWeight: isActive ? 600 : 500,
+    fontSize: '12px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    fontFamily: '"Inter", sans-serif',
+  });
 
   return (
     <>
@@ -124,7 +264,7 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
         position: 'fixed',
         top: '56px',
         right: 0,
-        width: '440px',
+        width: '480px',
         height: 'calc(100vh - 56px)',
         background: 'var(--color-surface)',
         borderLeft: '1px solid var(--color-border)',
@@ -179,6 +319,35 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
           </div>
         )}
 
+        {/* ─── Progress Bar ─────────────────────────────────────────────────── */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ ...LABEL, marginBottom: 0 }}>Progress</span>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: progress >= 100 ? 'var(--color-jade)' : 'var(--color-text-primary)' }}>
+              {progress}%
+            </span>
+          </div>
+          <div style={{
+            width: '100%',
+            height: '6px',
+            background: 'var(--color-surface-2)',
+            borderRadius: '3px',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              width: `${progress}%`,
+              height: '100%',
+              background: progress >= 100
+                ? 'var(--color-jade)'
+                : progress >= 50
+                  ? 'var(--color-saffron)'
+                  : 'var(--color-status-todo)',
+              borderRadius: '3px',
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
+        </div>
+
         {/* Description */}
         <div style={SECTION}>
           <div style={LABEL}>Description</div>
@@ -232,7 +401,270 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
           </select>
         </div>
 
-        {/* Notes */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* TABBED SECTIONS — Subtasks, Attachments, Comments                  */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        <div>
+          {/* Tab bar */}
+          <div style={{
+            display: 'flex',
+            borderBottom: '1px solid var(--color-border)',
+            marginBottom: '16px',
+          }}>
+            <button style={tabButtonStyle(activeTab === 'subtasks')}   onClick={() => setActiveTab('subtasks')}>
+              Subtasks {task.subtasks?.length ? `(${task.subtasks.length})` : ''}
+            </button>
+            <button style={tabButtonStyle(activeTab === 'attachments')} onClick={() => setActiveTab('attachments')}>
+              Files {task.attachments?.length ? `(${task.attachments.length})` : ''}
+            </button>
+            <button style={tabButtonStyle(activeTab === 'comments')}    onClick={() => setActiveTab('comments')}>
+              Comments {task.comments?.length ? `(${task.comments.length})` : ''}
+            </button>
+          </div>
+
+          {/* ─── Subtasks Tab ────────────────────────────────────────────── */}
+          {activeTab === 'subtasks' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {(!task.subtasks || task.subtasks.length === 0) && (
+                <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', padding: '8px 0' }}>No subtasks yet</div>
+              )}
+              {task.subtasks?.map(st => (
+                <div key={st._id} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 10px',
+                  background: 'var(--color-surface-2)',
+                  borderRadius: '4px',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={st.isDone}
+                    onChange={() => handleToggleSubtask(st._id, st.isDone)}
+                    style={{ cursor: 'pointer', accentColor: 'var(--color-jade)', width: '16px', height: '16px' }}
+                  />
+                  <span style={{
+                    flex: 1,
+                    fontSize: '13px',
+                    color: st.isDone ? 'var(--color-text-muted)' : 'var(--color-text-primary)',
+                    textDecoration: st.isDone ? 'line-through' : 'none',
+                    transition: 'all 0.2s',
+                  }}>
+                    {st.title}
+                  </span>
+                  <button
+                    onClick={() => handleDeleteSubtask(st._id)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-text-muted)',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      padding: '0 4px',
+                      opacity: 0.6,
+                    }}
+                    onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-red)'; }}
+                    onMouseOut={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                <input
+                  placeholder="Add subtask..."
+                  value={newSubtaskTitle}
+                  onChange={e => setNewSubtaskTitle(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleAddSubtask(); }}
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button
+                  onClick={handleAddSubtask}
+                  disabled={!newSubtaskTitle.trim()}
+                  style={{
+                    padding: '8px 14px',
+                    background: 'var(--color-jade)',
+                    color: '#0D1117',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: newSubtaskTitle.trim() ? 'pointer' : 'not-allowed',
+                    opacity: newSubtaskTitle.trim() ? 1 : 0.5,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ─── Attachments Tab ─────────────────────────────────────────── */}
+          {activeTab === 'attachments' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {(!task.attachments || task.attachments.length === 0) && (
+                <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', padding: '8px 0' }}>No attachments yet</div>
+              )}
+              {task.attachments?.map(att => {
+                const canDelete = isFounder || att.uploadedBy?._id === user?._id || att.uploadedBy === user?._id;
+                return (
+                  <div key={att._id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px 12px',
+                    background: 'var(--color-surface-2)',
+                    borderRadius: '4px',
+                  }}>
+                    <span style={{ fontSize: '20px', flexShrink: 0 }}>{getFileIcon(att.fileType)}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <a
+                        href={att.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: 'var(--color-text-primary)',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          textDecoration: 'none',
+                          display: 'block',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                        onMouseOver={e => e.currentTarget.style.color = 'var(--color-jade)'}
+                        onMouseOut={e => e.currentTarget.style.color = 'var(--color-text-primary)'}
+                      >
+                        {att.fileName}
+                      </a>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                        {formatFileSize(att.fileSize)} · {att.uploadedBy?.name || 'Unknown'} · {formatRelative(att.uploadedAt)}
+                      </div>
+                    </div>
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDeleteAttachment(att._id)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--color-text-muted)',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          padding: '0 4px',
+                          opacity: 0.6,
+                        }}
+                        onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-red)'; }}
+                        onMouseOut={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--color-jade)',
+                  color: '#0D1117',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                  opacity: uploading ? 0.5 : 1,
+                  alignSelf: 'flex-start',
+                  marginTop: '4px',
+                }}
+              >
+                {uploading ? 'Uploading...' : '📎 Upload File'}
+              </button>
+            </div>
+          )}
+
+          {/* ─── Comments Tab ────────────────────────────────────────────── */}
+          {activeTab === 'comments' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {sortedComments.length === 0 && (
+                <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', padding: '8px 0' }}>No comments yet</div>
+              )}
+              {sortedComments.map(c => {
+                const canDelete = isFounder || c.author?._id === user?._id || c.author === user?._id;
+                return (
+                  <div key={c._id} style={{
+                    padding: '10px 12px',
+                    background: 'var(--color-surface-2)',
+                    borderRadius: '4px',
+                    fontSize: '13px',
+                    lineHeight: 1.5,
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ color: 'var(--color-text-primary)', flex: 1 }}>{c.text}</div>
+                      {canDelete && (
+                        <button
+                          onClick={() => handleDeleteComment(c._id)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--color-text-muted)',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            padding: '0 4px',
+                            flexShrink: 0,
+                            opacity: 0.6,
+                          }}
+                          onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-red)'; }}
+                          onMouseOut={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ color: 'var(--color-text-muted)', marginTop: '4px' }}>
+                      {c.author?.name || 'Unknown'} · {formatRelative(c.createdAt)}
+                    </div>
+                  </div>
+                );
+              })}
+              <textarea
+                placeholder="Write a comment..."
+                value={commentText}
+                onChange={e => setCommentText(e.target.value)}
+                rows={2}
+                style={{ ...inputStyle, resize: 'vertical' }}
+              />
+              <button
+                onClick={handleAddComment}
+                disabled={!commentText.trim()}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--color-jade)',
+                  color: '#0D1117',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: commentText.trim() ? 'pointer' : 'not-allowed',
+                  opacity: commentText.trim() ? 1 : 0.5,
+                  alignSelf: 'flex-start',
+                }}
+              >
+                Add Comment
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Notes (existing — untouched) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={LABEL}>Notes</div>
           {sortedNotes.length === 0 ? (
