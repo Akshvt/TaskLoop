@@ -1,50 +1,3 @@
-[data-theme="dark"] {
-  /* Neo-Brutalism */
-  --neo-border: 2px solid #000;
-  --neo-shadow: 4px 4px 0px #000;
-  --neo-shadow-hover: 6px 6px 0px #000;
-  --neo-shadow-active: 2px 2px 0px #000;
-  --neo-border-radius: 6px;
-
-  /* Dark Mode (Default) */
-  --color-bg: #101010;
-  --color-surface: #1A1A1A;
-  --color-sidebar: #1A1A1A;
-  
-  --color-primary: #2DD4BF; /* Fallback to jade if needed */
-  --color-urgent: #E2411E;
-  
-  --color-text-primary: #F5F5F5;
-  --color-text-muted: #8A8A8A;
-  
-  --color-border: #2A2A2A;
-  
-  --color-nav-active: #A0E2E0; /* Kept from light mode instructions if needed, or adjust */
-  --color-btn-bg: #C8FBFA;
-
-  /* Status */
-  --color-status-todo: #4F8EF7;
-  --color-status-inprogress: #F4A836;
-  --color-status-done: #2DD4BF;
-  --color-status-blocked: #EF4444;
-  --color-status-bg: #291423;
-
-  /* Progress Bar */
-  --color-progress-fill: #5494FB;
-  --color-progress-track: #282828;
-
-  /* Priority */
-  --color-priority-high: #E2411E;
-  --color-priority-medium: #F4A836;
-  --color-priority-low: #8A8A8A;
-  
-  /* Fallbacks for existing variables used in the app */
-  --color-surface-2: #1A1A1A; 
-  --color-jade: #2DD4BF;
-  --color-saffron: #F4A836;
-  --color-red: #E2411E;
-}
-
 :root,
 [data-theme="light"] {
   /* Neo-Brutalism */
@@ -92,4 +45,51 @@
   --color-jade: #2DD4BF;
   --color-saffron: #EFC785;
   --color-red: #E7ABAB;
+}
+
+[data-theme="dark"] {
+  /* Neo-Brutalism */
+  --neo-border: 2px solid #000;
+  --neo-shadow: 4px 4px 0px #000;
+  --neo-shadow-hover: 6px 6px 0px #000;
+  --neo-shadow-active: 2px 2px 0px #000;
+  --neo-border-radius: 6px;
+
+  /* Dark Mode */
+  --color-bg: #101010;
+  --color-surface: #1A1A1A;
+  --color-sidebar: #1A1A1A;
+  
+  --color-primary: #2DD4BF; /* Fallback to jade if needed */
+  --color-urgent: #E2411E;
+  
+  --color-text-primary: #F5F5F5;
+  --color-text-muted: #8A8A8A;
+  
+  --color-border: #2A2A2A;
+  
+  --color-nav-active: #A0E2E0; /* Kept from light mode instructions if needed, or adjust */
+  --color-btn-bg: #C8FBFA;
+
+  /* Status */
+  --color-status-todo: #4F8EF7;
+  --color-status-inprogress: #F4A836;
+  --color-status-done: #2DD4BF;
+  --color-status-blocked: #EF4444;
+  --color-status-bg: #291423;
+
+  /* Progress Bar */
+  --color-progress-fill: #5494FB;
+  --color-progress-track: #282828;
+
+  /* Priority */
+  --color-priority-high: #E2411E;
+  --color-priority-medium: #F4A836;
+  --color-priority-low: #8A8A8A;
+  
+  /* Fallbacks for existing variables used in the app */
+  --color-surface-2: #1A1A1A; 
+  --color-jade: #2DD4BF;
+  --color-saffron: #F4A836;
+  --color-red: #E2411E;
 }

@@ -265,7 +265,6 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
 
       {/* Drawer */}
       <div 
-        data-theme="dark"
         style={{
         position: 'fixed',
         top: '72px',
