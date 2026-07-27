@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api/axios';
+import { Sun, Moon } from 'lucide-react';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -12,6 +14,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,13 +49,16 @@ export default function RegisterPage() {
   };
 
   const inputStyle = {
-    padding: '12px',
+    padding: '12px 14px',
     background: 'var(--color-surface-2)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '4px',
+    border: 'var(--neo-border)',
+    borderRadius: 'var(--neo-border-radius)',
     color: 'var(--color-text-primary)',
     fontSize: '14px',
-    outline: 'none'
+    fontFamily: '"Plus Jakarta Sans", sans-serif',
+    fontWeight: 600,
+    outline: 'none',
+    boxShadow: 'var(--neo-shadow)',
   };
 
   return (
@@ -62,32 +68,61 @@ export default function RegisterPage() {
       alignItems: 'center',
       justifyContent: 'center',
       background: 'radial-gradient(circle at center, var(--color-surface-2) 0%, var(--color-bg) 100%)',
+      padding: '20px'
     }}>
       <div style={{
-        width: '380px',
+        width: '400px',
         background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
-        borderRadius: '8px',
+        border: 'var(--neo-border)',
+        borderRadius: 'var(--neo-border-radius)',
         padding: '40px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '24px'
+        gap: '24px',
+        boxShadow: '8px 8px 0px #000',
       }}>
-        <h1 style={{
-          margin: 0,
-          color: 'var(--color-jade)',
-          fontFamily: '"Plus Jakarta Sans", sans-serif',
-          fontWeight: 700,
-          fontSize: '28px',
-          textAlign: 'center'
-        }}>
-          Register
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{
+            margin: 0,
+            color: 'var(--color-primary)',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
+            fontWeight: 900,
+            fontSize: '32px',
+          }}>
+            Register
+          </h1>
+          <button 
+            type="button"
+            onClick={toggleTheme}
+            title="Toggle theme"
+            style={{ 
+              background: 'var(--color-surface-2)', 
+              border: '2px solid #000', 
+              boxShadow: '2px 2px 0px #000',
+              cursor: 'pointer',
+              padding: '8px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.1s',
+              color: 'var(--color-text-primary)'
+            }}
+          >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+        </div>
 
         {error && (
           <div style={{
-            color: 'var(--color-red)',
-            fontSize: '14px',
+            color: '#000',
+            background: 'var(--color-urgent)',
+            border: '2px solid #000',
+            boxShadow: '2px 2px 0px #000',
+            padding: '10px',
+            borderRadius: '4px',
+            fontSize: '13px',
+            fontWeight: 800,
             textAlign: 'center'
           }}>
             {error}
@@ -131,24 +166,30 @@ export default function RegisterPage() {
             type="submit"
             disabled={loading}
             style={{
-              padding: '12px',
-              background: 'var(--color-jade)',
-              color: '#0D1117',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontWeight: 600,
+              padding: '14px',
+              background: 'var(--color-primary)',
+              color: '#000',
+              border: '2px solid #000',
+              boxShadow: '4px 4px 0px #000',
+              borderRadius: '6px',
+              fontSize: '15px',
+              fontWeight: 900,
               cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1
+              opacity: loading ? 0.7 : 1,
+              textTransform: 'uppercase',
+              transition: 'all 0.1s',
+              marginTop: '8px'
             }}
+            onMouseDown={e => { e.currentTarget.style.transform = 'translate(2px, 2px)'; e.currentTarget.style.boxShadow = '2px 2px 0px #000'; }}
+            onMouseUp={e => { e.currentTarget.style.transform = 'translate(0, 0)'; e.currentTarget.style.boxShadow = '4px 4px 0px #000'; }}
           >
             {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', fontSize: '14px' }}>
+        <div style={{ textAlign: 'center', fontSize: '14px', fontWeight: 600 }}>
           <span style={{ color: 'var(--color-text-muted)' }}>Already have an account? </span>
-          <Link to="/login" style={{ color: 'var(--color-jade)', textDecoration: 'none' }}>
+          <Link to="/login" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 800 }}>
             Sign In
           </Link>
         </div>

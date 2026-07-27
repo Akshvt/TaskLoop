@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api/axios';
+import { Sun, Moon } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,6 +13,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,6 +60,19 @@ export default function LoginPage() {
     }
   };
 
+  const inputStyle = {
+    padding: '12px 14px',
+    background: 'var(--color-surface-2)',
+    border: 'var(--neo-border)',
+    borderRadius: 'var(--neo-border-radius)',
+    color: 'var(--color-text-primary)',
+    fontSize: '14px',
+    fontFamily: '"Plus Jakarta Sans", sans-serif',
+    fontWeight: 600,
+    outline: 'none',
+    boxShadow: 'var(--neo-shadow)',
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -64,32 +80,61 @@ export default function LoginPage() {
       alignItems: 'center',
       justifyContent: 'center',
       background: 'radial-gradient(circle at center, var(--color-surface-2) 0%, var(--color-bg) 100%)',
+      padding: '20px'
     }}>
       <div style={{
-        width: '380px',
+        width: '400px',
         background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
-        borderRadius: '8px',
+        border: 'var(--neo-border)',
+        borderRadius: 'var(--neo-border-radius)',
         padding: '40px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '24px'
+        gap: '24px',
+        boxShadow: '8px 8px 0px #000',
       }}>
-        <h1 style={{
-          margin: 0,
-          color: 'var(--color-jade)',
-          fontFamily: '"Plus Jakarta Sans", sans-serif',
-          fontWeight: 700,
-          fontSize: '28px',
-          textAlign: 'center'
-        }}>
-          Namhya Tasks
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{
+            margin: 0,
+            color: 'var(--color-primary)',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
+            fontWeight: 900,
+            fontSize: '32px',
+          }}>
+            Namhya Tasks
+          </h1>
+          <button 
+            type="button"
+            onClick={toggleTheme}
+            title="Toggle theme"
+            style={{ 
+              background: 'var(--color-surface-2)', 
+              border: '2px solid #000', 
+              boxShadow: '2px 2px 0px #000',
+              cursor: 'pointer',
+              padding: '8px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.1s',
+              color: 'var(--color-text-primary)'
+            }}
+          >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+        </div>
 
         {error && (
           <div style={{
-            color: 'var(--color-red)',
-            fontSize: '14px',
+            color: '#000',
+            background: 'var(--color-urgent)',
+            border: '2px solid #000',
+            boxShadow: '2px 2px 0px #000',
+            padding: '10px',
+            borderRadius: '4px',
+            fontSize: '13px',
+            fontWeight: 800,
             textAlign: 'center'
           }}>
             {error}
@@ -101,9 +146,12 @@ export default function LoginPage() {
           <div style={{
             display: 'flex',
             background: 'var(--color-surface-2)',
+            border: '2px solid #000',
+            boxShadow: '2px 2px 0px #000',
             borderRadius: '6px',
             padding: '4px',
             marginBottom: '8px',
+            gap: '4px'
           }}>
             <button
               type="button"
@@ -111,15 +159,16 @@ export default function LoginPage() {
               style={{
                 flex: 1,
                 padding: '10px',
-                border: 'none',
+                border: selectedRole === 'employee' ? '2px solid #000' : 'none',
                 borderRadius: '4px',
-                background: selectedRole === 'employee' ? 'var(--color-surface)' : 'transparent',
-                color: selectedRole === 'employee' ? 'var(--color-jade)' : 'var(--color-text-muted)',
-                fontWeight: selectedRole === 'employee' ? 600 : 500,
+                background: selectedRole === 'employee' ? 'var(--color-primary)' : 'transparent',
+                color: selectedRole === 'employee' ? '#000' : 'var(--color-text-muted)',
+                fontWeight: 800,
                 fontSize: '14px',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: selectedRole === 'employee' ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                transition: 'all 0.1s',
+                boxShadow: selectedRole === 'employee' ? '2px 2px 0px #000' : 'none',
+                textTransform: 'uppercase'
               }}
             >
               Employee
@@ -130,15 +179,16 @@ export default function LoginPage() {
               style={{
                 flex: 1,
                 padding: '10px',
-                border: 'none',
+                border: selectedRole === 'founder' ? '2px solid #000' : 'none',
                 borderRadius: '4px',
-                background: selectedRole === 'founder' ? 'var(--color-surface)' : 'transparent',
-                color: selectedRole === 'founder' ? 'var(--color-jade)' : 'var(--color-text-muted)',
-                fontWeight: selectedRole === 'founder' ? 600 : 500,
+                background: selectedRole === 'founder' ? 'var(--color-primary)' : 'transparent',
+                color: selectedRole === 'founder' ? '#000' : 'var(--color-text-muted)',
+                fontWeight: 800,
                 fontSize: '14px',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: selectedRole === 'founder' ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                transition: 'all 0.1s',
+                boxShadow: selectedRole === 'founder' ? '2px 2px 0px #000' : 'none',
+                textTransform: 'uppercase'
               }}
             >
               Founder
@@ -151,15 +201,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{
-              padding: '12px',
-              background: 'var(--color-surface-2)',
-              border: '1px solid var(--color-border)',
-              borderRadius: '4px',
-              color: 'var(--color-text-primary)',
-              fontSize: '14px',
-              outline: 'none'
-            }}
+            style={inputStyle}
           />
           <input
             type="password"
@@ -167,39 +209,37 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{
-              padding: '12px',
-              background: 'var(--color-surface-2)',
-              border: '1px solid var(--color-border)',
-              borderRadius: '4px',
-              color: 'var(--color-text-primary)',
-              fontSize: '14px',
-              outline: 'none'
-            }}
+            style={inputStyle}
           />
           <button
             type="submit"
             disabled={loading}
             style={{
-              padding: '12px',
-              background: 'var(--color-jade)',
-              color: '#0D1117',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontWeight: 600,
+              padding: '14px',
+              background: 'var(--color-primary)',
+              color: '#000',
+              border: '2px solid #000',
+              boxShadow: '4px 4px 0px #000',
+              borderRadius: '6px',
+              fontSize: '15px',
+              fontWeight: 900,
               cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1
+              opacity: loading ? 0.7 : 1,
+              textTransform: 'uppercase',
+              transition: 'all 0.1s',
+              marginTop: '8px'
             }}
+            onMouseDown={e => { e.currentTarget.style.transform = 'translate(2px, 2px)'; e.currentTarget.style.boxShadow = '2px 2px 0px #000'; }}
+            onMouseUp={e => { e.currentTarget.style.transform = 'translate(0, 0)'; e.currentTarget.style.boxShadow = '4px 4px 0px #000'; }}
           >
             {loading ? 'Signing in...' : `Continue as ${selectedRole === 'founder' ? 'Founder' : 'Employee'}`}
           </button>
         </form>
 
         {selectedRole === 'employee' && (
-          <div style={{ textAlign: 'center', fontSize: '14px' }}>
+          <div style={{ textAlign: 'center', fontSize: '14px', fontWeight: 600 }}>
             <span style={{ color: 'var(--color-text-muted)' }}>Don't have an account? </span>
-            <Link to="/register" style={{ color: 'var(--color-jade)', textDecoration: 'none' }}>
+            <Link to="/register" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 800 }}>
               Register
             </Link>
           </div>

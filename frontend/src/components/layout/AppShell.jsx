@@ -7,10 +7,10 @@ export default function AppShell({ children }) {
       <TopBar />
       <Sidebar />
       <main style={{
-        marginLeft: '200px',
-        marginTop: '56px',
+        marginLeft: '230px',
+        marginTop: '72px',
         padding: '32px',
-        minHeight: 'calc(100vh - 56px)',
+        minHeight: 'calc(100vh - 72px)',
         overflowY: 'auto'
       }}>
         {children}

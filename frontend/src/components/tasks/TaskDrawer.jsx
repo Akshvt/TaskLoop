@@ -4,6 +4,7 @@ import api from '../../api/axios';
 import StatusBadge from '../common/StatusBadge';
 import PriorityBadge from '../common/PriorityBadge';
 import { useToast } from '../common/Toast';
+import { Paperclip, Image as ImageIcon, FileText, FileSpreadsheet, Archive, ArrowLeft, X } from 'lucide-react';
 
 const STATUSES   = ['To Do', 'In Progress', 'Done', 'Blocked'];
 const PRIORITIES = ['High', 'Medium', 'Low'];
@@ -25,13 +26,13 @@ const formatFileSize = (bytes) => {
 };
 
 const getFileIcon = (type) => {
-  if (!type) return '📎';
-  if (type.startsWith('image/')) return '🖼️';
-  if (type.includes('pdf'))     return '📄';
-  if (type.includes('sheet') || type.includes('csv') || type.includes('excel')) return '📊';
-  if (type.includes('doc') || type.includes('word')) return '📝';
-  if (type.includes('zip') || type.includes('rar') || type.includes('tar'))  return '📦';
-  return '📎';
+  if (!type) return <Paperclip size={18} />;
+  if (type.startsWith('image/')) return <ImageIcon size={18} />;
+  if (type.includes('pdf'))     return <FileText size={18} />;
+  if (type.includes('sheet') || type.includes('csv') || type.includes('excel')) return <FileSpreadsheet size={18} />;
+  if (type.includes('doc') || type.includes('word')) return <FileText size={18} />;
+  if (type.includes('zip') || type.includes('rar') || type.includes('tar'))  return <Archive size={18} />;
+  return <Paperclip size={18} />;
 };
 
 const LABEL = { fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-muted)', marginBottom: '8px', fontFamily: '"Inter", sans-serif' };
@@ -218,31 +219,34 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
   const progress = task.progress ?? 0;
 
   const inputStyle = {
-    padding: '8px 10px',
+    padding: '10px 12px',
     background: 'var(--color-surface-2)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '4px',
+    border: 'var(--neo-border)',
+    borderRadius: 'var(--neo-border-radius)',
     color: 'var(--color-text-primary)',
     fontSize: '14px',
     width: '100%',
-    fontFamily: '"Inter", sans-serif',
+    fontFamily: '"Plus Jakarta Sans", sans-serif',
+    fontWeight: 600,
     outline: 'none',
+    boxShadow: 'var(--neo-shadow)',
   };
 
   const tabButtonStyle = (isActive) => ({
     flex: 1,
-    padding: '8px 0',
-    background: isActive ? 'var(--color-surface)' : 'transparent',
-    border: 'none',
-    borderBottom: isActive ? '2px solid var(--color-jade)' : '2px solid transparent',
-    color: isActive ? 'var(--color-jade)' : 'var(--color-text-muted)',
-    fontWeight: isActive ? 600 : 500,
+    padding: '10px 0',
+    background: isActive ? 'var(--color-primary)' : 'var(--color-surface)',
+    border: 'var(--neo-border)',
+    borderRadius: '4px',
+    color: isActive ? '#000' : 'var(--color-text-primary)',
+    fontWeight: 800,
     fontSize: '12px',
     textTransform: 'uppercase',
     letterSpacing: '0.04em',
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    fontFamily: '"Inter", sans-serif',
+    transition: 'all 0.1s',
+    fontFamily: '"Plus Jakarta Sans", sans-serif',
+    boxShadow: isActive ? '2px 2px 0px #000' : 'none',
   });
 
   return (
@@ -260,22 +264,26 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
       />
 
       {/* Drawer */}
-      <div style={{
+      <div 
+        data-theme="dark"
+        style={{
         position: 'fixed',
-        top: '56px',
+        top: '72px',
         right: 0,
         width: '480px',
-        height: 'calc(100vh - 56px)',
+        height: 'calc(100vh - 72px)',
         background: 'var(--color-surface)',
-        borderLeft: '1px solid var(--color-border)',
+        borderLeft: '4px solid #000',
+        boxShadow: '-6px 0 0 #000',
         zIndex: 151,
         overflowY: 'auto',
-        padding: '24px',
+        padding: '32px',
         display: 'flex',
         flexDirection: 'column',
         gap: '24px',
         transform: 'translateX(0)',
         animation: 'slideInDrawer 0.25s cubic-bezier(0.4,0,0.2,1)',
+        color: 'var(--color-text-primary)'
       }}>
         <style>{`
           @keyframes slideInDrawer {
@@ -288,11 +296,35 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', fontSize: '20px', padding: '0', lineHeight: 1 }}
+            style={{ background: 'var(--color-surface-2)', border: '2px solid #000', borderRadius: '4px', color: 'var(--color-text-primary)', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '2px 2px 0px #000' }}
           >
-            ←
+            <ArrowLeft size={20} strokeWidth={2.5} />
           </button>
-          <PriorityBadge priority={task.priority} />
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <PriorityBadge priority={task.priority} variant="number" />
+            <select
+              value={task.status}
+              onChange={e => handleStatusChange(e.target.value)}
+              style={{
+                appearance: 'none',
+                background: `var(--color-status-${task.status.toLowerCase().replace(' ', '')})`,
+                border: '2px solid #000',
+                boxShadow: '2px 2px 0px #000',
+                color: '#000',
+                borderRadius: '6px',
+                padding: '4px 28px 4px 12px',
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 600,
+                fontSize: '11px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
         </div>
 
         {/* Title + meta */}
@@ -307,13 +339,25 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
           </div>
         ) : (
           <div>
-            <div style={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 700, fontSize: '22px', color: 'var(--color-text-primary)', marginBottom: '6px' }}>
+            <div style={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 700, fontSize: '24px', color: 'var(--color-text-primary)', marginBottom: '8px' }}>
               {task.title}
             </div>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-              Assigned to {task.assignedTo?.name} · Due {formatDate(task.deadline)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--color-text-muted)' }}>
+              {task.assignedTo && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{
+                    width: '20px', height: '20px', borderRadius: '50%', background: 'var(--color-primary)', color: '#101010',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 'bold'
+                  }}>
+                    {task.assignedTo.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span>{task.assignedTo.name}</span>
+                </div>
+              )}
+              <span>·</span>
+              <span>Due {formatDate(task.deadline)}</span>
               {task.status === 'Done' && task.completedAt && new Date(task.completedAt) > new Date(task.deadline) && (
-                <span style={{ color: '#F4A836', marginLeft: '6px', fontWeight: 600 }}>(Submitted late)</span>
+                <span style={{ color: 'var(--color-saffron)', fontWeight: 600 }}>(Late)</span>
               )}
             </div>
           </div>
@@ -329,10 +373,12 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
           </div>
           <div style={{
             width: '100%',
-            height: '6px',
+            height: '10px',
             background: 'var(--color-surface-2)',
-            borderRadius: '3px',
+            borderRadius: '5px',
             overflow: 'hidden',
+            border: '2px solid #000',
+            boxShadow: '2px 2px 0px #000',
           }}>
             <div style={{
               width: `${progress}%`,
@@ -389,17 +435,7 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
           </>
         )}
 
-        {/* Status */}
-        <div style={SECTION}>
-          <div style={LABEL}>Status</div>
-          <select
-            value={task.status}
-            onChange={e => handleStatusChange(e.target.value)}
-            style={{ ...inputStyle, width: 'auto', cursor: 'pointer' }}
-          >
-            {STATUSES.map(s => <option key={s}>{s}</option>)}
-          </select>
-        </div>
+        {/* Removed duplicate status section */}
 
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {/* TABBED SECTIONS — Subtasks, Attachments, Comments                  */}
@@ -459,14 +495,15 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
                       border: 'none',
                       color: 'var(--color-text-muted)',
                       cursor: 'pointer',
-                      fontSize: '14px',
                       padding: '0 4px',
                       opacity: 0.6,
+                      display: 'flex',
+                      alignItems: 'center'
                     }}
-                    onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-red)'; }}
+                    onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-urgent)'; }}
                     onMouseOut={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
                   >
-                    ✕
+                    <X size={16} />
                   </button>
                 </div>
               ))}
@@ -483,15 +520,17 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
                   disabled={!newSubtaskTitle.trim()}
                   style={{
                     padding: '8px 14px',
-                    background: 'var(--color-jade)',
-                    color: '#0D1117',
-                    border: 'none',
+                    background: 'var(--color-primary)',
+                    color: '#000',
+                    border: '2px solid #000',
+                    boxShadow: '2px 2px 0px #000',
                     borderRadius: '4px',
                     fontSize: '13px',
-                    fontWeight: 600,
+                    fontWeight: 800,
                     cursor: newSubtaskTitle.trim() ? 'pointer' : 'not-allowed',
                     opacity: newSubtaskTitle.trim() ? 1 : 0.5,
                     whiteSpace: 'nowrap',
+                    textTransform: 'uppercase'
                   }}
                 >
                   Add
@@ -550,14 +589,15 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
                           border: 'none',
                           color: 'var(--color-text-muted)',
                           cursor: 'pointer',
-                          fontSize: '14px',
                           padding: '0 4px',
                           opacity: 0.6,
+                          display: 'flex',
+                          alignItems: 'center'
                         }}
-                        onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-red)'; }}
+                        onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-urgent)'; }}
                         onMouseOut={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
                       >
-                        ✕
+                        <X size={16} />
                       </button>
                     )}
                   </div>
@@ -574,19 +614,24 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
                 disabled={uploading}
                 style={{
                   padding: '8px 16px',
-                  background: 'var(--color-jade)',
-                  color: '#0D1117',
-                  border: 'none',
+                  background: 'var(--color-primary)',
+                  color: '#000',
+                  border: '2px solid #000',
+                  boxShadow: '2px 2px 0px #000',
                   borderRadius: '4px',
                   fontSize: '13px',
-                  fontWeight: 600,
+                  fontWeight: 800,
                   cursor: uploading ? 'not-allowed' : 'pointer',
                   opacity: uploading ? 0.5 : 1,
                   alignSelf: 'flex-start',
                   marginTop: '4px',
+                  textTransform: 'uppercase',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
                 }}
               >
-                {uploading ? 'Uploading...' : '📎 Upload File'}
+                <Paperclip size={16} /> {uploading ? 'Uploading...' : 'Upload File'}
               </button>
             </div>
           )}
@@ -617,15 +662,16 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
                             border: 'none',
                             color: 'var(--color-text-muted)',
                             cursor: 'pointer',
-                            fontSize: '14px',
                             padding: '0 4px',
                             flexShrink: 0,
                             opacity: 0.6,
+                            display: 'flex',
+                            alignItems: 'center'
                           }}
-                          onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-red)'; }}
+                          onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-urgent)'; }}
                           onMouseOut={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
                         >
-                          ✕
+                          <X size={16} />
                         </button>
                       )}
                     </div>
@@ -647,15 +693,17 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
                 disabled={!commentText.trim()}
                 style={{
                   padding: '8px 16px',
-                  background: 'var(--color-jade)',
-                  color: '#0D1117',
-                  border: 'none',
+                  background: 'var(--color-primary)',
+                  color: '#000',
+                  border: '2px solid #000',
+                  boxShadow: '2px 2px 0px #000',
                   borderRadius: '4px',
                   fontSize: '13px',
-                  fontWeight: 600,
+                  fontWeight: 800,
                   cursor: commentText.trim() ? 'pointer' : 'not-allowed',
                   opacity: commentText.trim() ? 1 : 0.5,
                   alignSelf: 'flex-start',
+                  textTransform: 'uppercase'
                 }}
               >
                 Add Comment
@@ -664,11 +712,11 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
           )}
         </div>
 
-        {/* Notes (existing — untouched) */}
+        {/* Activity (formerly Notes) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={LABEL}>Notes</div>
+          <div style={LABEL}>Activity</div>
           {sortedNotes.length === 0 ? (
-            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>No notes yet</div>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>No activity yet</div>
           ) : (
             sortedNotes.map((note, i) => (
               <div key={i} style={{
@@ -697,15 +745,17 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
             disabled={!noteText.trim()}
             style={{
               padding: '8px 16px',
-              background: 'var(--color-jade)',
-              color: '#0D1117',
-              border: 'none',
+              background: 'var(--color-primary)',
+              color: '#000',
+              border: '2px solid #000',
+              boxShadow: '2px 2px 0px #000',
               borderRadius: '4px',
               fontSize: '13px',
-              fontWeight: 600,
+              fontWeight: 800,
               cursor: noteText.trim() ? 'pointer' : 'not-allowed',
               opacity: noteText.trim() ? 1 : 0.5,
-              alignSelf: 'flex-start'
+              alignSelf: 'flex-start',
+              textTransform: 'uppercase'
             }}
           >
             Add Note
@@ -720,33 +770,33 @@ export default function TaskDrawer({ task, onClose, onUpdate, onDelete, employee
 
         {/* Founder actions */}
         {isFounder && (
-          <div style={{ display: 'flex', gap: '10px', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
+          <div style={{ display: 'flex', gap: '10px', borderTop: '2px solid #000', paddingTop: '16px' }}>
             {isEditing ? (
               <>
-                <button onClick={handleSaveEdit} disabled={saving} style={{ padding: '8px 16px', background: 'var(--color-jade)', color: '#0D1117', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: 'pointer', fontSize: '13px' }}>
+                <button onClick={handleSaveEdit} disabled={saving} style={{ padding: '8px 16px', background: 'var(--color-primary)', color: '#000', border: '2px solid #000', boxShadow: '2px 2px 0px #000', borderRadius: '4px', fontWeight: 800, cursor: 'pointer', fontSize: '13px', textTransform: 'uppercase' }}>
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
-                <button onClick={() => setIsEditing(false)} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}>
+                <button onClick={() => setIsEditing(false)} style={{ padding: '8px 16px', background: 'var(--color-surface-2)', border: '2px solid #000', boxShadow: '2px 2px 0px #000', color: 'var(--color-text-primary)', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase' }}>
                   Cancel
                 </button>
               </>
             ) : (
-              <button onClick={() => setIsEditing(true)} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}>
+              <button onClick={() => setIsEditing(true)} style={{ padding: '8px 16px', background: 'var(--color-surface-2)', border: '2px solid #000', boxShadow: '2px 2px 0px #000', color: 'var(--color-text-primary)', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase' }}>
                 Edit
               </button>
             )}
 
             {confirmDelete ? (
               <>
-                <button onClick={handleDelete} style={{ padding: '8px 16px', background: '#EF4444', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: 'pointer', fontSize: '13px' }}>
+                <button onClick={handleDelete} style={{ padding: '8px 16px', background: 'var(--color-urgent)', color: '#000', border: '2px solid #000', boxShadow: '2px 2px 0px #000', borderRadius: '4px', fontWeight: 800, cursor: 'pointer', fontSize: '13px', textTransform: 'uppercase' }}>
                   Confirm Delete
                 </button>
-                <button onClick={() => setConfirmDelete(false)} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}>
+                <button onClick={() => setConfirmDelete(false)} style={{ padding: '8px 16px', background: 'var(--color-surface-2)', border: '2px solid #000', boxShadow: '2px 2px 0px #000', color: 'var(--color-text-primary)', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase' }}>
                   Cancel
                 </button>
               </>
             ) : (
-              <button onClick={() => setConfirmDelete(true)} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #EF4444', color: '#EF4444', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', marginLeft: 'auto' }}>
+              <button onClick={() => setConfirmDelete(true)} style={{ padding: '8px 16px', background: 'var(--color-urgent)', border: '2px solid #000', boxShadow: '2px 2px 0px #000', color: '#000', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 800, marginLeft: 'auto', textTransform: 'uppercase' }}>
                 Delete
               </button>
             )}

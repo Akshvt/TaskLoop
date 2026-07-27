@@ -1,27 +1,38 @@
-const PRIORITY_STYLES = {
-  'High':   { color: '#EF4444', bg: 'rgba(239,68,68,0.12)' },
-  'Medium': { color: '#F4A836', bg: 'rgba(244,168,54,0.12)' },
-  'Low':    { color: '#6B7280', bg: 'rgba(107,114,128,0.12)' },
+const PRIORITY_COLORS = {
+  'High':   'var(--color-priority-high)',
+  'Medium': 'var(--color-priority-medium)',
+  'Low':    'var(--color-priority-low)',
 };
 
-export default function PriorityBadge({ priority }) {
-  const styles = PRIORITY_STYLES[priority] || { color: '#8B8FA8', bg: 'rgba(139,143,168,0.12)' };
+const PRIORITY_NUMBERS = {
+  'High':   'P1',
+  'Medium': 'P2',
+  'Low':    'P3',
+};
+
+export default function PriorityBadge({ priority, variant = 'text' }) {
+  const color = PRIORITY_COLORS[priority] || 'var(--color-text-muted)';
+  const display = variant === 'number' ? PRIORITY_NUMBERS[priority] || priority : priority;
 
   return (
     <span style={{
-      display: 'inline-block',
-      borderRadius: '12px',
-      padding: '4px 10px',
-      fontFamily: '"Inter", sans-serif',
-      fontWeight: 600,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 'var(--neo-border-radius)',
+      padding: variant === 'number' ? '4px 6px' : '4px 10px',
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
+      fontWeight: 800,
       fontSize: '11px',
       textTransform: 'uppercase',
       letterSpacing: '0.05em',
-      color: styles.color,
-      background: styles.bg,
+      color: '#000',
+      background: color,
+      border: '2px solid #000',
+      boxShadow: '2px 2px 0px #000',
       whiteSpace: 'nowrap',
     }}>
-      {priority}
+      {display}
     </span>
   );
 }

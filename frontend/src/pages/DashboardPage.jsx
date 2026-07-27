@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import { Hand } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -66,19 +67,32 @@ export default function DashboardPage() {
     Math.ceil((new Date() - new Date(date)) / (1000 * 60 * 60 * 24));
 
   const StatCard = ({ title, value, color }) => (
-    <div style={{
-      background: 'var(--color-surface)',
-      border: '1px solid var(--color-border)',
-      borderLeft: `4px solid ${color}`,
-      borderRadius: '8px',
-      padding: '24px',
-      flex: 1,
-      minWidth: '200px'
-    }}>
-      <div style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '8px' }}>
+    <div 
+      style={{
+        background: 'var(--color-surface)',
+        border: 'var(--neo-border)',
+        borderLeft: `8px solid ${color}`,
+        borderRadius: 'var(--neo-border-radius)',
+        padding: '24px',
+        flex: 1,
+        minWidth: '200px',
+        boxShadow: 'var(--neo-shadow)',
+        transition: 'all 0.1s',
+        cursor: 'default'
+      }}
+      onMouseOver={(e) => {
+        e.currentTarget.style.transform = 'translate(-2px, -2px)';
+        e.currentTarget.style.boxShadow = 'var(--neo-shadow-hover)';
+      }}
+      onMouseOut={(e) => {
+        e.currentTarget.style.transform = 'translate(0, 0)';
+        e.currentTarget.style.boxShadow = 'var(--neo-shadow)';
+      }}
+    >
+      <div style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '8px', fontWeight: 600 }}>
         {title}
       </div>
-      <div style={{ color: 'var(--color-text-primary)', fontSize: '28px', fontWeight: 600, fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
+      <div style={{ color: 'var(--color-text-primary)', fontSize: '32px', fontWeight: 900, fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
         {value}
       </div>
     </div>
@@ -93,18 +107,21 @@ export default function DashboardPage() {
       <h1 style={{
         margin: 0,
         fontFamily: '"Plus Jakarta Sans", sans-serif',
-        fontWeight: 700,
-        fontSize: '24px',
-        color: 'var(--color-text-primary)'
+        fontWeight: 800,
+        fontSize: '28px',
+        color: 'var(--color-text-primary)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
       }}>
-        Good morning, {user?.name.split(' ')[0]} 👋
+        Good morning, {user?.name.split(' ')[0]} <Hand size={28} strokeWidth={2.5} color="var(--color-primary)" />
       </h1>
 
       <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-        <StatCard title="Total Tasks" value={totalTasks} color="var(--color-jade)" />
-        <StatCard title="Overdue" value={overdueTasks.length} color="var(--color-red)" />
-        <StatCard title="Due Soon" value={dueSoonTasks.length} color="var(--color-amber, var(--color-saffron))" />
-        <StatCard title="Done This Week" value={doneThisWeek} color="var(--color-jade)" />
+        <StatCard title="Total Tasks" value={totalTasks} color="var(--color-primary)" />
+        <StatCard title="Overdue" value={overdueTasks.length} color="var(--color-urgent)" />
+        <StatCard title="Due Soon" value={dueSoonTasks.length} color="var(--color-saffron)" />
+        <StatCard title="Done This Week" value={doneThisWeek} color="var(--color-primary)" />
       </div>
 
       <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap' }}>
@@ -113,16 +130,16 @@ export default function DashboardPage() {
         <div style={{ flex: 1, minWidth: '300px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <h2 style={{
             margin: 0,
-            fontFamily: '"Inter", sans-serif',
-            fontWeight: 600,
-            fontSize: '16px',
-            color: 'var(--color-red)'
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
+            fontWeight: 800,
+            fontSize: '18px',
+            color: 'var(--color-urgent)'
           }}>
             Overdue Tasks
           </h2>
           
           {overdueTasks.length === 0 ? (
-            <div style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>No overdue tasks. Great job!</div>
+            <div style={{ color: 'var(--color-text-muted)', fontSize: '14px', background: 'var(--color-surface)', padding: '16px', borderRadius: 'var(--neo-border-radius)', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow)', fontWeight: 600 }}>No overdue tasks. Great job!</div>
           ) : (
             overdueTasks.map(task => {
               const daysOver = daysBetween(task.deadline);
@@ -132,19 +149,34 @@ export default function DashboardPage() {
                   onClick={() => navigate('/tasks')}
                   style={{
                     background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                    borderLeft: '4px solid var(--color-red)',
-                    borderRadius: '8px',
+                    border: 'var(--neo-border)',
+                    borderLeft: '8px solid var(--color-urgent)',
+                    borderRadius: 'var(--neo-border-radius)',
                     padding: '16px',
                     cursor: 'pointer',
-                    transition: 'background 0.2s'
+                    transition: 'all 0.1s',
+                    boxShadow: 'var(--neo-shadow)'
                   }}
-                  onMouseOver={(e) => e.currentTarget.style.background = 'var(--color-surface-2)'}
-                  onMouseOut={(e) => e.currentTarget.style.background = 'var(--color-surface)'}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                    e.currentTarget.style.boxShadow = 'var(--neo-shadow-hover)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translate(0, 0)';
+                    e.currentTarget.style.boxShadow = 'var(--neo-shadow)';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'translate(2px, 2px)';
+                    e.currentTarget.style.boxShadow = 'var(--neo-shadow-active)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                    e.currentTarget.style.boxShadow = 'var(--neo-shadow-hover)';
+                  }}
                 >
-                  <div style={{ fontWeight: 500, marginBottom: '4px' }}>{task.title}</div>
-                  <div style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-                    {task.assignedTo?.name} · <span style={{ color: 'var(--color-red)' }}>{daysOver} day{daysOver !== 1 ? 's' : ''} overdue</span>
+                  <div style={{ fontWeight: 800, marginBottom: '4px', color: 'var(--color-text-primary)' }}>{task.title}</div>
+                  <div style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                    {task.assignedTo?.name} · <span style={{ color: 'var(--color-urgent)', fontWeight: 700 }}>{daysOver} day{daysOver !== 1 ? 's' : ''} overdue</span>
                   </div>
                 </div>
               )
@@ -156,16 +188,16 @@ export default function DashboardPage() {
         <div style={{ flex: 1, minWidth: '300px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <h2 style={{
             margin: 0,
-            fontFamily: '"Inter", sans-serif',
-            fontWeight: 600,
-            fontSize: '16px',
-            color: 'var(--color-amber, var(--color-saffron))'
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
+            fontWeight: 800,
+            fontSize: '18px',
+            color: 'var(--color-saffron)'
           }}>
             Due in 48 Hours
           </h2>
           
           {dueSoonTasks.length === 0 ? (
-            <div style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>No tasks due soon.</div>
+            <div style={{ color: 'var(--color-text-muted)', fontSize: '14px', background: 'var(--color-surface)', padding: '16px', borderRadius: 'var(--neo-border-radius)', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow)', fontWeight: 600 }}>No tasks due soon.</div>
           ) : (
             dueSoonTasks.map(task => {
               const daysLeft = -daysBetween(task.deadline);
@@ -177,19 +209,34 @@ export default function DashboardPage() {
                   onClick={() => navigate('/tasks')}
                   style={{
                     background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                    borderLeft: '4px solid var(--color-amber, var(--color-saffron))',
-                    borderRadius: '8px',
+                    border: 'var(--neo-border)',
+                    borderLeft: '8px solid var(--color-saffron)',
+                    borderRadius: 'var(--neo-border-radius)',
                     padding: '16px',
                     cursor: 'pointer',
-                    transition: 'background 0.2s'
+                    transition: 'all 0.1s',
+                    boxShadow: 'var(--neo-shadow)'
                   }}
-                  onMouseOver={(e) => e.currentTarget.style.background = 'var(--color-surface-2)'}
-                  onMouseOut={(e) => e.currentTarget.style.background = 'var(--color-surface)'}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                    e.currentTarget.style.boxShadow = 'var(--neo-shadow-hover)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translate(0, 0)';
+                    e.currentTarget.style.boxShadow = 'var(--neo-shadow)';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'translate(2px, 2px)';
+                    e.currentTarget.style.boxShadow = 'var(--neo-shadow-active)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                    e.currentTarget.style.boxShadow = 'var(--neo-shadow-hover)';
+                  }}
                 >
-                  <div style={{ fontWeight: 500, marginBottom: '4px' }}>{task.title}</div>
-                  <div style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-                    {task.assignedTo?.name} · <span style={{ color: 'var(--color-amber, var(--color-saffron))' }}>{relativeTime}</span>
+                  <div style={{ fontWeight: 800, marginBottom: '4px', color: 'var(--color-text-primary)' }}>{task.title}</div>
+                  <div style={{ fontSize: '14px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                    {task.assignedTo?.name} · <span style={{ color: 'var(--color-saffron)', fontWeight: 700 }}>{relativeTime}</span>
                   </div>
                 </div>
               )

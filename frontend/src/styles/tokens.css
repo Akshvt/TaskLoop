@@ -1,29 +1,95 @@
-:root {
-  --color-bg: #0D1117;
-  --color-surface: #1A1D27;
-  --color-surface-2: #1E2436;
-  --color-border: #262D40;
-  
-  --color-primary: #00C896;
-  --color-jade: #00C896;
-  --color-jade-dim: rgba(0, 200, 150, 0.1);
-  
-  --color-accent: #F4A836;
-  --color-saffron: #F4A836;
-  
-  --color-danger: #EF4444;
-  --color-red: #EF4444;
-  
-  --color-text-primary: #F0F2F7;
-  --color-text-secondary: #8B8FA8;
-  --color-text-muted: #8B8FA8;
+:root,
+[data-theme="dark"] {
+  /* Neo-Brutalism */
+  --neo-border: 2px solid #000;
+  --neo-shadow: 4px 4px 0px #000;
+  --neo-shadow-hover: 6px 6px 0px #000;
+  --neo-shadow-active: 2px 2px 0px #000;
+  --neo-border-radius: 6px;
 
+  /* Dark Mode (Default) */
+  --color-bg: #101010;
+  --color-surface: #1A1A1A;
+  --color-sidebar: #1A1A1A;
+  
+  --color-primary: #2DD4BF; /* Fallback to jade if needed */
+  --color-urgent: #E2411E;
+  
+  --color-text-primary: #F5F5F5;
+  --color-text-muted: #8A8A8A;
+  
+  --color-border: #2A2A2A;
+  
+  --color-nav-active: #A0E2E0; /* Kept from light mode instructions if needed, or adjust */
+  --color-btn-bg: #C8FBFA;
+
+  /* Status */
   --color-status-todo: #4F8EF7;
   --color-status-inprogress: #F4A836;
-  --color-status-done: #00C896;
+  --color-status-done: #2DD4BF;
   --color-status-blocked: #EF4444;
+  --color-status-bg: #291423;
 
-  --color-priority-high: #EF4444;
+  /* Progress Bar */
+  --color-progress-fill: #5494FB;
+  --color-progress-track: #282828;
+
+  /* Priority */
+  --color-priority-high: #E2411E;
   --color-priority-medium: #F4A836;
-  --color-priority-low: #6B7280;
+  --color-priority-low: #8A8A8A;
+  
+  /* Fallbacks for existing variables used in the app */
+  --color-surface-2: #1A1A1A; 
+  --color-jade: #2DD4BF;
+  --color-saffron: #F4A836;
+  --color-red: #E2411E;
+}
+
+[data-theme="light"] {
+  /* Neo-Brutalism */
+  --neo-border: 2px solid #000;
+  --neo-shadow: 4px 4px 0px #000;
+  --neo-shadow-hover: 6px 6px 0px #000;
+  --neo-shadow-active: 2px 2px 0px #000;
+  --neo-border-radius: 6px;
+
+  /* Light Mode */
+  --color-bg: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-sidebar: #FFFFFF;
+  
+  --color-primary: #2DD4BF;
+  --color-secondary: #5243CE;
+  --color-urgent: #E7ABAB;
+  
+  --color-text-primary: #14171F;
+  --color-text-muted: #6B7280;
+  
+  --color-border: #E4E7ED;
+  
+  --color-nav-active: #A0E2E0;
+  --color-btn-bg: #C8FBFA;
+
+  /* Status */
+  --color-status-todo: #4F8EF7;
+  --color-status-inprogress: #F4A836;
+  --color-status-done: #2DD4BF;
+  --color-status-blocked: #EF4444;
+  --color-status-bg: #F2ECFD; /* Placeholder based on instructions */
+
+  /* Progress Bar */
+  --color-progress-fill: #2DD4BF;
+  --color-progress-track: #E4E7ED;
+
+  /* Priority */
+  --color-priority-high: #E7ABAB;
+  --color-priority-medium: #EBF4F4;
+  --color-priority-low: #F2ECFD;
+
+  /* Fallbacks */
+  --color-surface-2: #F9FAFB;
+  --color-jade: #2DD4BF;
+  --color-saffron: #EFC785;
+  --color-red: #E7ABAB;
 }

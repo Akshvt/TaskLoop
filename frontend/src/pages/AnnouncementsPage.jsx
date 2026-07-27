@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { useToast } from '../components/common/Toast';
 import { formatDistanceToNow } from 'date-fns';
+import { Megaphone, Plus, X } from 'lucide-react';
 
 const OVERLAY = {
   position: 'fixed',
@@ -15,15 +16,17 @@ const OVERLAY = {
 };
 
 const INPUT = {
-  padding: '10px 12px',
+  padding: '12px 14px',
   background: 'var(--color-surface)',
-  border: '1px solid var(--color-border)',
-  borderRadius: '4px',
+  border: 'var(--neo-border)',
+  borderRadius: 'var(--neo-border-radius)',
   color: 'var(--color-text-primary)',
   fontSize: '14px',
   width: '100%',
-  fontFamily: '"Inter", sans-serif',
+  fontFamily: '"Plus Jakarta Sans", sans-serif',
+  fontWeight: 600,
   outline: 'none',
+  boxShadow: 'var(--neo-shadow)',
 };
 
 function PostModal({ onClose, onPosted }) {
@@ -53,16 +56,22 @@ function PostModal({ onClose, onPosted }) {
       <div style={{
         width: '480px',
         background: 'var(--color-surface-2)',
-        border: '1px solid var(--color-border)',
-        borderRadius: '8px',
+        border: 'var(--neo-border)',
+        borderRadius: 'var(--neo-border-radius)',
         padding: '32px',
         display: 'flex',
         flexDirection: 'column',
         gap: '20px',
+        boxShadow: '8px 8px 0px #000',
       }}>
-        <h2 style={{ margin: 0, fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 700, fontSize: '20px', color: 'var(--color-text-primary)' }}>
-          Post Announcement
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ margin: 0, fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 800, fontSize: '22px', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Megaphone size={24} color="var(--color-primary)" /> Post Announcement
+          </h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-primary)' }}>
+            <X size={24} />
+          </button>
+        </div>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <input
             type="text"
@@ -80,11 +89,11 @@ function PostModal({ onClose, onPosted }) {
             required
             style={{ ...INPUT, resize: 'vertical' }}
           />
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            <button type="button" onClick={onClose} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
+            <button type="button" onClick={onClose} style={{ padding: '10px 20px', background: 'var(--color-surface)', border: '2px solid #000', boxShadow: '2px 2px 0px #000', color: 'var(--color-text-primary)', borderRadius: '6px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase' }}>
               Cancel
             </button>
-            <button type="submit" disabled={loading} style={{ padding: '10px 20px', background: 'var(--color-jade)', color: '#0D1117', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+            <button type="submit" disabled={loading} style={{ padding: '10px 20px', background: 'var(--color-primary)', color: '#000', border: '2px solid #000', boxShadow: '2px 2px 0px #000', borderRadius: '6px', fontSize: '13px', fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, textTransform: 'uppercase' }}>
               {loading ? 'Posting...' : 'Post'}
             </button>
           </div>
@@ -125,60 +134,65 @@ export default function AnnouncementsPage() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 style={{ margin: 0, fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 700, fontSize: '24px', color: 'var(--color-text-primary)' }}>
-          Announcements
+        <h1 style={{ margin: 0, fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 800, fontSize: '28px', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          Announcements <Megaphone size={28} strokeWidth={2.5} color="var(--color-primary)" />
         </h1>
         {isFounder && (
           <button
             onClick={() => setShowModal(true)}
-            style={{ padding: '10px 18px', background: 'var(--color-jade)', color: '#0D1117', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+            style={{ padding: '10px 18px', background: 'var(--color-primary)', color: '#000', border: '2px solid #000', boxShadow: '4px 4px 0px #000', borderRadius: '6px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.1s' }}
+            onMouseDown={e => { e.currentTarget.style.transform = 'translate(2px, 2px)'; e.currentTarget.style.boxShadow = '2px 2px 0px #000'; }}
+            onMouseUp={e => { e.currentTarget.style.transform = 'translate(0, 0)'; e.currentTarget.style.boxShadow = '4px 4px 0px #000'; }}
           >
-            + Post Announcement
+            <Plus size={18} strokeWidth={3} /> Post Announcement
           </button>
         )}
       </div>
 
       {/* List */}
       {loading ? (
-        <div style={{ color: 'var(--color-text-muted)' }}>Loading...</div>
+        <div style={{ color: 'var(--color-text-muted)', fontWeight: 600 }}>Loading...</div>
       ) : announcements.length === 0 ? (
-        <div style={{ color: 'var(--color-text-muted)', padding: '48px', textAlign: 'center' }}>No announcements yet</div>
+        <div style={{ color: 'var(--color-text-muted)', padding: '48px', textAlign: 'center', background: 'var(--color-surface)', borderRadius: 'var(--neo-border-radius)', border: 'var(--neo-border)', boxShadow: 'var(--neo-shadow)', fontWeight: 600 }}>No announcements yet</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {announcements.map(a => (
             <div key={a._id} style={{
               background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              borderRadius: '8px',
+              border: 'var(--neo-border)',
+              borderLeft: '8px solid var(--color-primary)',
+              borderRadius: 'var(--neo-border-radius)',
               padding: '24px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '10px',
+              gap: '12px',
               position: 'relative',
+              boxShadow: 'var(--neo-shadow)',
+              transition: 'all 0.1s'
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
-                <div style={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 600, fontSize: '16px', color: 'var(--color-text-primary)' }}>
+                <div style={{ fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: 800, fontSize: '20px', color: 'var(--color-text-primary)' }}>
                   {a.title}
                 </div>
                 {isFounder && (
                   <button
                     onClick={() => handleDelete(a._id)}
                     title="Delete announcement"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '18px', lineHeight: 1, padding: '0', flexShrink: 0 }}
-                    onMouseOver={e => e.currentTarget.style.color = 'var(--color-red)'}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '0', flexShrink: 0, transition: 'color 0.2s', display: 'flex', alignItems: 'center' }}
+                    onMouseOver={e => e.currentTarget.style.color = 'var(--color-urgent)'}
                     onMouseOut={e  => e.currentTarget.style.color = 'var(--color-text-muted)'}
                   >
-                    ×
+                    <X size={20} strokeWidth={2.5} />
                   </button>
                 )}
               </div>
-              <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '14px', lineHeight: 1.7, color: 'var(--color-text-primary)' }}>
+              <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '15px', lineHeight: 1.7, color: 'var(--color-text-primary)', fontWeight: 500 }}>
                 {a.body}
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>
                 Posted by {a.createdBy?.name || 'Unknown'} · {formatDistanceToNow(new Date(a.createdAt), { addSuffix: true })}
               </div>
             </div>
