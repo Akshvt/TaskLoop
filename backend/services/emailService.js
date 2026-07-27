@@ -6,15 +6,16 @@ require('dns').setDefaultResultOrder('ipv4first');
 // ─── Transporter ──────────────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false,                    // STARTTLS on 587, not implicit TLS on 465
+  family: 4,                        // Force IPv4 — Render blocks outbound IPv6
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  tls: {
-    rejectUnauthorized: false
-  }
+  connectionTimeout: 10000,         // 10s to establish TCP connection
+  greetingTimeout:   10000,         // 10s to receive SMTP greeting
+  socketTimeout:     10000,         // 10s of inactivity before dropping
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -49,8 +50,9 @@ const send = async ({ to, subject, text }) => {
       subject,
       text,
     });
+    console.log(`✅ Email sent (${subject}) → ${to}`);
   } catch (err) {
-    console.error(`❌ Email failed (${subject}):`, err.message);
+    console.error(`❌ Email failed (${subject}):`, err);
     // Non-fatal — don't throw, let the API response succeed
   }
 };
