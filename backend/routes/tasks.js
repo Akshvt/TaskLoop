@@ -1,9 +1,10 @@
 const router = require('express').Router();
 const Task   = require('../models/Task');
 const User   = require('../models/User');
+const Notification = require('../models/Notification');
 const requireAuth    = require('../middleware/requireAuth');
 const requireFounder = require('../middleware/requireFounder');
-const { sendTaskAssignment, sendTaskCompletion } = require('../services/emailService');
+const { sendTaskAssignment, sendTaskCompletion, sendOverdueNotice } = require('../services/emailService');
 
 // All task routes require auth
 router.use(requireAuth);
@@ -100,6 +101,13 @@ router.post('/', requireFounder, async (req, res) => {
         ...task.toObject(),
         createdByName: founder ? founder.name : 'Your manager',
       });
+      // Create notification
+      await Notification.create({
+        recipient: assignedTo,
+        task: task._id,
+        type: 'task_assigned',
+        message: `You have been assigned a new task: ${title}`
+      });
     }
 
     res.status(201).json(populated);
@@ -153,6 +161,18 @@ router.put('/:id', async (req, res) => {
       }
     }
 
+    // Trigger notification if assignee changes status
+    if (req.user.role === 'employee' && task.status !== previousStatus) {
+      if (task.createdBy) {
+        await Notification.create({
+          recipient: task.createdBy,
+          task: task._id,
+          type: 'status_changed',
+          message: `${req.user.name} changed status of "${task.title}" to ${task.status}`
+        });
+      }
+    }
+
     const populated = await Task.findById(task._id)
       .populate('assignedTo', 'name email')
       .populate('createdBy', 'name email')
@@ -200,6 +220,23 @@ router.post('/:id/notes', async (req, res) => {
 
     await task.save();
 
+    // Create notification
+    if (req.user.role === 'founder') {
+      await Notification.create({
+        recipient: task.assignedTo,
+        task: task._id,
+        type: 'note_added',
+        message: `A note was added to your task "${task.title}" by the founder`
+      });
+    } else if (task.createdBy) {
+      await Notification.create({
+        recipient: task.createdBy,
+        task: task._id,
+        type: 'note_added',
+        message: `${req.user.name} added a note to "${task.title}"`
+      });
+    }
+
     const populated = await Task.findById(task._id)
       .populate('assignedTo', 'name email')
       .populate('createdBy', 'name email')
@@ -208,6 +245,25 @@ router.post('/:id/notes', async (req, res) => {
     res.json(populated);
   } catch (err) {
     console.error('Add note error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ─── POST /api/tasks/:id/remind ──────────────────────────────────────────────
+router.post('/:id/remind', requireFounder, async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id).populate('assignedTo');
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    if (!task.assignedTo) {
+      return res.status(400).json({ error: 'Task has no assignee' });
+    }
+
+    await sendOverdueNotice(task.assignedTo, task);
+    res.json({ message: 'Reminder sent' });
+  } catch (err) {
+    console.error('Send reminder error:', err.message);
     res.status(500).json({ error: 'Server error' });
   }
 });

@@ -1,5 +1,6 @@
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import NotificationsDropdown from './NotificationsDropdown';
 
 export default function TopBar() {
   const { user, logout } = useAuth();
@@ -47,6 +48,7 @@ export default function TopBar() {
         }}>
           {user?.name}
         </span>
+        <NotificationsDropdown />
         <button
           onClick={handleLogout}
           style={{

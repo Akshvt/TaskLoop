@@ -7,6 +7,7 @@ const authRoutes        = require('./routes/auth');
 const userRoutes        = require('./routes/users');
 const taskRoutes        = require('./routes/tasks');
 const announcementRoutes = require('./routes/announcements');
+const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use('/api/auth',          authRoutes);
 app.use('/api/users',         userRoutes);
 app.use('/api/tasks',         taskRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {

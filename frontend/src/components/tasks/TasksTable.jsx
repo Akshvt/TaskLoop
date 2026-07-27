@@ -1,5 +1,9 @@
 import StatusBadge from '../common/StatusBadge';
 import PriorityBadge from '../common/PriorityBadge';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
+import { useToast } from '../common/Toast';
+import { useState } from 'react';
 
 const getDeadlineDisplay = (task) => {
   if (task.status === 'Done' && task.completedAt && new Date(task.completedAt) > new Date(task.deadline)) {
@@ -28,6 +32,25 @@ const COL_STYLE = {
 };
 
 export default function TasksTable({ tasks, onRowClick }) {
+  const { user } = useAuth();
+  const addToast = useToast();
+  const isFounder = user?.role === 'founder';
+  const [sendingReminderId, setSendingReminderId] = useState(null);
+
+  const handleSendReminder = async (e, task) => {
+    e.stopPropagation();
+    setSendingReminderId(task._id);
+    try {
+      await api.post(`/api/tasks/${task._id}/remind`);
+      addToast(`Reminder sent to ${task.assignedTo?.name || 'assignee'}`, 'success');
+    } catch (err) {
+      console.error('Failed to send reminder', err);
+      addToast('Failed to send reminder', 'error');
+    } finally {
+      setSendingReminderId(null);
+    }
+  };
+
   if (tasks.length === 0) {
     return (
       <div style={{ color: 'var(--color-text-muted)', padding: '48px', textAlign: 'center' }}>
@@ -45,7 +68,7 @@ export default function TasksTable({ tasks, onRowClick }) {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)' }}>
-            {['Task', 'Assigned To', 'Deadline', 'Priority', 'Status'].map(h => (
+            {['Task', 'Assigned To', 'Deadline', 'Priority', 'Status', ...(isFounder ? ['Actions'] : [])].map(h => (
               <th key={h} style={{
                 ...COL_STYLE,
                 textAlign: 'left',
@@ -100,6 +123,32 @@ export default function TasksTable({ tasks, onRowClick }) {
                 <td style={COL_STYLE}>
                   <StatusBadge status={task.status} />
                 </td>
+                {isFounder && (
+                  <td style={COL_STYLE}>
+                    {overdue && (
+                      <button
+                        onClick={(e) => handleSendReminder(e, task)}
+                        disabled={sendingReminderId === task._id}
+                        style={{
+                          background: 'transparent',
+                          border: '1px solid var(--color-red)',
+                          color: 'var(--color-red)',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          cursor: sendingReminderId === task._id ? 'not-allowed' : 'pointer',
+                          opacity: sendingReminderId === task._id ? 0.5 : 1,
+                          transition: 'background 0.2s',
+                        }}
+                        onMouseOver={e => { if (sendingReminderId !== task._id) { e.currentTarget.style.background = 'var(--color-red)'; e.currentTarget.style.color = '#fff'; } }}
+                        onMouseOut={e => { if (sendingReminderId !== task._id) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-red)'; } }}
+                      >
+                        {sendingReminderId === task._id ? 'Sending...' : 'Send Reminder'}
+                      </button>
+                    )}
+                  </td>
+                )}
               </tr>
             );
           })}

@@ -43,8 +43,8 @@ export default function TasksPage() {
     debounceTimer.current = setTimeout(() => setDebouncedSearch(value), 300);
   };
 
-  const fetchTasks = useCallback(async () => {
-    setLoading(true);
+  const fetchTasks = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const params = {};
       if (filterEmployee) params.assignedTo = filterEmployee;
@@ -55,11 +55,15 @@ export default function TasksPage() {
     } catch (err) {
       console.error('Failed to fetch tasks:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [filterEmployee, filterStatus, filterPriority]);
 
-  useEffect(() => { fetchTasks(); }, [fetchTasks]);
+  useEffect(() => { 
+    fetchTasks();
+    const interval = setInterval(() => fetchTasks(true), 15000);
+    return () => clearInterval(interval);
+  }, [fetchTasks]);
 
   useEffect(() => {
     if (isFounder) {

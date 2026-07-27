@@ -6,6 +6,7 @@ import api from '../api/axios';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState('employee');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -16,7 +17,19 @@ export default function LoginPage() {
     setError('');
 
     const isGmail = /^[^\s@]+@gmail\.com$/.test(email);
-    if (email !== 'founder@namhyafoods.com' && !isGmail) {
+    const isFounderEmail = email === 'founder@namhyafoods.com';
+
+    if (selectedRole === 'founder' && !isFounderEmail) {
+      setError('Please use the founder email address');
+      return;
+    }
+
+    if (selectedRole === 'employee' && isFounderEmail) {
+      setError('Please use the Founder role to log in with this email');
+      return;
+    }
+
+    if (!isFounderEmail && !isGmail) {
       setError('Please use a Gmail address');
       return;
     }
@@ -24,6 +37,12 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const response = await api.post('/api/auth/login', { email, password });
+      
+      if (response.data.user.role !== selectedRole) {
+        setError(`You tried to log in as ${selectedRole} but this account is registered as ${response.data.user.role}.`);
+        return;
+      }
+
       login(response.data.token, response.data.user);
       
       if (response.data.user.role === 'founder') {
@@ -78,6 +97,54 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Role Toggle */}
+          <div style={{
+            display: 'flex',
+            background: 'var(--color-surface-2)',
+            borderRadius: '6px',
+            padding: '4px',
+            marginBottom: '8px',
+          }}>
+            <button
+              type="button"
+              onClick={() => { setSelectedRole('employee'); setError(''); }}
+              style={{
+                flex: 1,
+                padding: '10px',
+                border: 'none',
+                borderRadius: '4px',
+                background: selectedRole === 'employee' ? 'var(--color-surface)' : 'transparent',
+                color: selectedRole === 'employee' ? 'var(--color-jade)' : 'var(--color-text-muted)',
+                fontWeight: selectedRole === 'employee' ? 600 : 500,
+                fontSize: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: selectedRole === 'employee' ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+              }}
+            >
+              Employee
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSelectedRole('founder'); setError(''); }}
+              style={{
+                flex: 1,
+                padding: '10px',
+                border: 'none',
+                borderRadius: '4px',
+                background: selectedRole === 'founder' ? 'var(--color-surface)' : 'transparent',
+                color: selectedRole === 'founder' ? 'var(--color-jade)' : 'var(--color-text-muted)',
+                fontWeight: selectedRole === 'founder' ? 600 : 500,
+                fontSize: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: selectedRole === 'founder' ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+              }}
+            >
+              Founder
+            </button>
+          </div>
+
           <input
             type="email"
             placeholder="Email address"
@@ -125,16 +192,18 @@ export default function LoginPage() {
               opacity: loading ? 0.7 : 1
             }}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing in...' : `Continue as ${selectedRole === 'founder' ? 'Founder' : 'Employee'}`}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', fontSize: '14px' }}>
-          <span style={{ color: 'var(--color-text-muted)' }}>Don't have an account? </span>
-          <Link to="/register" style={{ color: 'var(--color-jade)', textDecoration: 'none' }}>
-            Register
-          </Link>
-        </div>
+        {selectedRole === 'employee' && (
+          <div style={{ textAlign: 'center', fontSize: '14px' }}>
+            <span style={{ color: 'var(--color-text-muted)' }}>Don't have an account? </span>
+            <Link to="/register" style={{ color: 'var(--color-jade)', textDecoration: 'none' }}>
+              Register
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

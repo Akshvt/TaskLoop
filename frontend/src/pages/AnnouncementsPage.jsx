@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { useToast } from '../components/common/Toast';
-
-const formatDate = (d) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+import { formatDistanceToNow } from 'date-fns';
 
 const OVERLAY = {
   position: 'fixed',
@@ -180,7 +179,7 @@ export default function AnnouncementsPage() {
                 {a.body}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                {a.createdBy?.name} · {formatDate(a.createdAt)}
+                Posted by {a.createdBy?.name || 'Unknown'} · {formatDistanceToNow(new Date(a.createdAt), { addSuffix: true })}
               </div>
             </div>
           ))}

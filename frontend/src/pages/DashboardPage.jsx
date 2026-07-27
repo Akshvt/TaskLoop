@@ -14,6 +14,9 @@ export default function DashboardPage() {
   const [dueSoonTasks, setDueSoonTasks] = useState([]);
 
   useEffect(() => {
+    let isMounted = true;
+    let initialLoadDone = false;
+
     const fetchDashboardData = async () => {
       try {
         const [tasksRes, overdueRes, dueSoonRes] = await Promise.all([
@@ -21,6 +24,8 @@ export default function DashboardPage() {
           api.get('/api/tasks/overdue'),
           api.get('/api/tasks/due-soon')
         ]);
+
+        if (!isMounted) return;
 
         const allTasks = tasksRes.data;
         setTotalTasks(allTasks.length);
@@ -36,17 +41,25 @@ export default function DashboardPage() {
         }).length;
         
         setDoneThisWeek(doneCount);
-
         setOverdueTasks(overdueRes.data);
         setDueSoonTasks(dueSoonRes.data);
       } catch (err) {
-        console.error('Failed to fetch dashboard data:', err);
+        if (isMounted) console.error('Failed to fetch dashboard data:', err);
       } finally {
-        setLoading(false);
+        if (isMounted && !initialLoadDone) {
+          setLoading(false);
+          initialLoadDone = true;
+        }
       }
     };
 
     fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 15000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const daysBetween = (date) =>
