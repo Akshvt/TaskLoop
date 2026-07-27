@@ -10,7 +10,6 @@ To complete the visual tour in this document, please take the following screensh
 
 | Filename | Where to Capture | What to Show |
 | :--- | :--- | :--- |
-| `login-role-select.png` | `/login` | The login screen showing the **Founder / Employee** segmented toggle switch and the theme toggle in the top right. |
 | `employee-register.png` | `/register` | The employee registration form where new team members sign up using their Gmail address. |
 | `dashboard-overview.png` | `/` (Dashboard) | The main command center showing the chunky stat cards (Total Tasks, Overdue, Due Soon, Done) and the quick reminder buttons. |
 | `tasks-board.png` | `/tasks` | The grouped tasks table showing collapsible To Do, In Progress, Blocked, and Done sections with priority pills and progress bars. |
@@ -27,12 +26,10 @@ To complete the visual tour in this document, please take the following screensh
 ### 1. Secure Role-Based Authentication
 Namhya Tasks is built around a two-tier organizational hierarchy: **The Founder** and **The Employees**.
 
-![Login & Role Selection](screenshots/login-role-select.png)
-
 * **Founder Access**: The founder account is the executive controller of the workspace. Selecting the **Founder** role on the login screen authenticates against exclusive executive privileges. Only the founder can delete tasks, post company-wide announcements, and trigger broadcast reminders.
 * **Employee Registration**: New employees click *"Don't have an account? Register"* to self-onboard. They select the **Employee** role, enter their verified Gmail address, and instantly gain access to their assigned tasks and team collaboration feeds.
 
-![Employee Registration](screenshots/employee-register.png)
+![Employee Registration & Auth](screenshots/employee-register.png)
 
 ---
 
